@@ -22,5 +22,5 @@
 
 ### Accounts and authentification
 When needed (except GMAPS) :
-- user : hpsms@slipry.net or hpsms
+- user : hpsms@slipry.net or hpsms (https://slippery.email/inbox/hpsms/v2SC9G7RlWq84ZKA#)
 - password : 7DwMx3wU#BfhH2pK
