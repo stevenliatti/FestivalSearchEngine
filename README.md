@@ -1,7 +1,7 @@
 # FestivalSearchEngine
 
 ## APIs and Keys
-- [Google Maps](https://developers.google.com/maps/) 
+- [Google Maps](https://developers.google.com/maps/)
     - Key : AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA
 
 - [Spotify](https://developer.spotify.com/)
@@ -15,7 +15,7 @@
     - oAuth Consumer Key : 9426e2640370827b058f
     - oAuth Consumer Secret : 3815c5e7b5fb427aebf6
 
-- [JamBase](http://developer.jambase.com/io-docs) 
+- [JamBase](http://developer.jambase.com/io-docs)
     - Key : naq556zv89ywpap6qfeu7b34
 
 - [MusicBrainz](https://musicbrainz.org/doc/Development)
@@ -24,3 +24,17 @@
 When needed (except GMAPS) :
 - user : hpsms@slipry.net or hpsms (https://slippery.email/inbox/hpsms/v2SC9G7RlWq84ZKA#)
 - password : 7DwMx3wU#BfhH2pK
+
+## Features
+- Welcome page with a search textbox and a swiss google map with a cached list of all main swiss festival as markers
+- Hovering over a marker displays in a bubble main infos about the Festival
+- Clicking on a marker displays informations about the event, the lineup, and plays a preview song of one artist of the lineup
+- Search can be made by artist, date, location and updates the markers displayed on the map
+
+### Optional features
+- Perform a search by radius with JamBase
+- Click on the artist of a displayed lineup to perform a search with this artist
+
+## Technical stuff
+- Frontend will be coded in HTML and JS mainly
+- Backend will be done through node JS. The server will be connected to a SQL database to cache the previews URL
