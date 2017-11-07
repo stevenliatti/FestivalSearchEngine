@@ -27,14 +27,21 @@ When needed (except GMAPS) :
 
 ## Features
 - Welcome page with a search textbox and a swiss google map with a cached list of all main swiss festival as markers
+	- API Route : Eventful (GET /events/search (position, categories, dates))
+	- Search : Eventful for performers, BandsInTown for artist's Facebook or images, MusicBrainz (maybe for later) to get more important stuff. Use Eventful for date and BandsInTown can complement Eventful, especially when searching a venue.
+	- BandsInTown also helps to get thumb images of groups.
 - Hovering over a marker displays in a bubble main infos about the Festival
-- Clicking on a marker displays informations about the event, the lineup, and plays a preview song of one artist of the lineup
+	- API : Google map for marker hover and Eventful infos to display
+- Clicking on a marker displays informations about the event, the lineup, and plays a preview song of one artist of the lineup in a mini player
+	- Eventful to get artist ressources and MusicBrainz for important informations
 - Search can be made by artist, date, location and updates the markers displayed on the map
+	- (See above : Eventful and MusicBrainz depending on the search)
 
 ### Optional features
-- Perform a search by radius with JamBase
+- Perform a search by radius with Eventful
 - Click on the artist of a displayed lineup to perform a search with this artist
 
 ## Technical stuff
 - Frontend will be coded in HTML and JS mainly
 - Backend will be done through node JS. The server will be connected to a SQL database to cache the previews URL
+- We decided not to use JamBase as it is not free and seems to give less informations than Eventful. We'll manage to go through the categories of the search.
