@@ -4,18 +4,43 @@
 	<title>Simple Map</title>
 	<meta name="viewport" content="initial-scale=1.0">
 	<meta charset="utf-8">
-	<link rel="stylesheet" type="text/css" href="style/main.css">
+	<link rel="stylesheet" type="text/css" href="style/main.css"><script
+			  src="https://code.jquery.com/jquery-3.2.1.min.js"
+			  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+			  crossorigin="anonymous"></script>
 </head>
 <body>
+	<h1>Festival Search Engine</h1>
+	<div id="search">
+		<form action="index.html" method="get">
+			<input type="text" value="Search the base" name="searchQuery" />
+		</form>
+	</div>
 	<div id="map"></div>
 	<script>
 		var map;
+		$.getJSON("http://api.eventful.com/json/events/search?app_key=WSpR5fzQ69N3w2FL&location=Switzerland&category=festivals_parades&page_size=100&date=20170101-20171231&sort_order=popularity", function(data) {
+			console.log("Callbacked");
+			console.log(data);
+		});
+		// var xhttp = new XMLHttpRequest();
+		// xhttp.open("GET", "api.eventful.com/json/events/search?app_key=WSpR5fzQ69N3w2FL&location=Switzerland&category=festivals_parades&page_size=100&date=20170101-20171231&sort_order=popularity", true);
+		// xhttp.responseType = "json";
+		// xhttp.onload = function() {
+		// 	console.log("reached on load");
+		// 	console.log(xhttp.response);
+		// };
+		// xhttp.send();
+		// //xhttp.setRequestHeader("Content-type", "application/json");
+		// //xhttp.send();
+		// //var response = JSON.parse(xhttp.response.query);
+		console.log("Cul");
 		function initMap() {
 			map = new google.maps.Map(document.getElementById('map'), {
 				center: {lat: 46.801111, lng: 8.226667},
 				zoom: 8
 			});
-		}
+		};
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA&callback=initMap" async defer></script>
 </body>
