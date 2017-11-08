@@ -18,8 +18,7 @@
 	</div>
 	<div id="map"></div>
 	<script>
-		var map;
-		$.getJSON("http://api.eventful.com/json/events/search?app_key=WSpR5fzQ69N3w2FL&location=Switzerland&category=festivals_parades&page_size=100&date=20170101-20171231&sort_order=popularity", function(data) {
+		$.getJSON("http://api.eventful.com/json/events/search?app_key=WSpR5fzQ69N3w2FL&location=Switzerland&category=festivals_parades&page_size=100&date=20170101-20171231&sort_order=popularity&callback=?", function(data) {
 			console.log("Callbacked");
 			console.log(data);
 		});
@@ -34,7 +33,8 @@
 		// //xhttp.setRequestHeader("Content-type", "application/json");
 		// //xhttp.send();
 		// //var response = JSON.parse(xhttp.response.query);
-		console.log("Cul");
+
+		var map;		
 		function initMap() {
 			map = new google.maps.Map(document.getElementById('map'), {
 				center: {lat: 46.801111, lng: 8.226667},
