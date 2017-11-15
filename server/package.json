@@ -1,0 +1,8 @@
+{
+    "name": "festivalsearchengine",
+    "version": "0.1.0",
+    "dependencies": {
+        "express": "^4.16.2",
+        "nodemon": "^1.12.1"
+    }
+}
