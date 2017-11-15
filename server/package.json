@@ -2,7 +2,10 @@
     "name": "festivalsearchengine",
     "version": "0.1.0",
     "dependencies": {
+        "cors": "^2.8.4",
         "express": "^4.16.2",
-        "nodemon": "^1.12.1"
+        "log": "^1.4.0",
+        "nodemon": "^1.12.1",
+        "request": "^2.83.0"
     }
 }
