@@ -43,7 +43,7 @@ app.get('/events', function(req, res) {
  * @apiName GetEvents
  * @apiGroup events
  * @apiVersion  0.1.0
- * 
+ *
  * @apiParam  {String} artist Optional artist name
  * @apiParam  {String} location Optional location name
  *
@@ -59,14 +59,14 @@ app.get('/events', function(req, res) {
  * @apiSuccess {String}   events.latitude Event's latitude
  * @apiSuccess {String}   events.longitude Event's longitude
  * @apiSuccess {String}   events.offer Event's offer URL to buy ticket for example
- * 
+ *
  * @apiSuccess {Object[]} events.performers Event's performers
  * @apiSuccess {String}   events.performers.name Performer's name
  * @apiSuccess {String}   events.performers.music_kind Performer's kind of music (short)
  * @apiSuccess {String}   events.performers.thumb Little image URL of the artist
  * @apiSuccess {String}   events.performers.image Image URL of the artist
  * @apiSuccess {String}   events.performers.facebook Facebook URL of the artist
- * 
+ *
  * @apiParamExample  {json} Request-Example:
  * {
  *   "artist": "Metallica",
@@ -119,10 +119,10 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiName GetInfos
  * @apiGroup infos
  * @apiVersion  0.1.0
- * 
- * 
+ *
+ *
  * @apiParam  {String} artist Artist name
- * 
+ *
  * @apiSuccess {Object}  artist Artist object
  * @apiSuccess {String}  artist.name Artist's name
  * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
@@ -132,12 +132,12 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
  * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
  * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- * 
+ *
  * @apiParamExample  {json} Request-Example:
  * {
  *   "artist": "Nirvana"
  * }
- * 
+ *
  * @apiSuccessExample {json} Success-Response:
  * {
  *   "name": "Nirvana",
