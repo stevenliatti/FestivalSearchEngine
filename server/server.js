@@ -8,7 +8,7 @@ const cors = require('cors');
 app.use(cors());
 
 const key_eventful = "WSpR5fzQ69N3w2FL";
-const url_eventful = "http://api.eventful.com/json/events/search?app_key=" + key_eventful + 
+const url_eventful = "http://api.eventful.com/json/events/search?app_key=" + key_eventful +
 "&location=Switzerland&category=music,festivals_parades&page_size=100&date=future&sort_order";
 
 
@@ -25,7 +25,7 @@ app.get('/events', function(req, res) {
 				b.events.event.forEach(e => {
 					events.push({id : e.id, title: e.title, city_name: e.city_name});
 				});
-				let ret = {"error" : false, "error_message" : "", "events" : events};				
+				let ret = {"error" : false, "error_message" : "", "events" : events};
 				res.type('json');
 				res.end(JSON.stringify(ret));
 			}
@@ -46,7 +46,7 @@ app.get('/events', function(req, res) {
  * 
  * @apiParam  {String} artist Optional artist name
  * @apiParam  {String} location Optional location name
- * 
+ *
  * @apiSuccess {Object[]} events Array of events
  * @apiSuccess {String}   events.id Event's id
  * @apiSuccess {String}   events.title Event's title
@@ -67,14 +67,12 @@ app.get('/events', function(req, res) {
  * @apiSuccess {String}   events.performers.image Image URL of the artist
  * @apiSuccess {String}   events.performers.facebook Facebook URL of the artist
  * 
- * 
  * @apiParamExample  {json} Request-Example:
  * {
  *   "artist": "Metallica",
  *   "location": "Geneva"
  * }
- * 
- * 
+ *
  * @apiSuccessExample {json} Success-Response:
  * {
  *   "events": [
@@ -107,17 +105,16 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
 	console.log(req.params);
 	let artist = req.params.artist;
 	let location = req.params.location;
-	
+
 	if (artist == undefined && location == undefined) {
 		res.send({"events": {}});
 	}
-	else { 
+	else {
 		res.send({});
 	}
 });
 
 /**
- * 
  * @api {get} /infos/artist=:artist Return infos of the artist
  * @apiName GetInfos
  * @apiGroup infos
@@ -131,10 +128,10 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
  * @apiSuccess {String}  artist.country Artist's country origin
  * @apiSuccess {String}  artist.disambiguation Artist's disambiguation = kind of music
- * @apiSuccess {Object}  artist.life-span Infos about life span of artist
- * @apiSuccess {Boolean} artist.life-span.ended If the artist/group don't exist anymore
- * @apiSuccess {String}  artist.life-span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- * @apiSuccess {String}  artist.life-span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {Object}  artist.life_span Infos about life span of artist
+ * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
+ * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
  * 
  * @apiParamExample  {json} Request-Example:
  * {
@@ -147,20 +144,51 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  *   "type": "Group",
  *   "country": "US",
  *   "disambiguation": "90s US grunge band",
- *   "life-span": {
+ *   "life_span": {
  *      "ended": true,
  *      "begin": "1988-02",
  *      "end": "1994-04-05"
  *    },
  * }
- * 
  */
 app.get('/infos/artist=:artist', function(req, res) {
 
 });
 
+/**
+ * @api {get} /tracks/artist=:artist Return the top-tracks infos for this artist. Also contains the track preview's URL
+ * @apiName GetTracks
+ * @apiGroup tracks
+ * @apiVersion  0.1.0
+ *
+ * @apiParam  {String} artist The artist name
+ *
+ * @apiSuccess {Object[]} tracks Array of tracks
+ * @apiSuccess {String}   tracks.id Tracks's id
+ * @apiSuccess {String}   tracks.name Tracks's title
+ * @apiSuccess {String}   tracks.album Name of the album the track's in
+ * @apiSuccess {String}   tracks.preview_url URL of the track preview
+ *
+ *
+ * @apiParamExample  {json} Request-Example:
+ * {
+ *   "artist": "Metallica"
+ * }
+ *
+ * @apiSuccessExample {json} Success-Response:
+ * {
+ *   "tracks": [
+ *     {
+ *       "id": "42",
+ *       "name": "Au pays des toupoutous",
+ *		 "album": "Coucou les loulous",
+ *       "preview_url": "www.republiquedesmangues.com"
+ *     }
+ *   ]
+ * }
+ */
 app.get('/tracks/artist=:artist', function(req, res) {
-	
+
 });
 
 app.listen(8080);
