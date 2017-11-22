@@ -47,6 +47,10 @@ app.get('/events', function(req, res) {
  * @apiParam  {String} artist Optional artist name
  * @apiParam  {String} location Optional location name
  *
+ * @apiError NoParam No location nor artist was given to the API
+ * @apiError ArtistNotFound The given artist wasn't found
+ * @apiError LocationNotFound The given location wasn't found
+ *
  * @apiSuccess {Object[]} events Array of events
  * @apiSuccess {String}   events.id Event's id
  * @apiSuccess {String}   events.title Event's title
@@ -120,8 +124,10 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiGroup infos
  * @apiVersion  0.1.0
  *
- *
  * @apiParam  {String} artist Artist name
+ *
+ * @apiError ArtistNotFound The given artist wasn't found
+ * @apiError NoArtist No artist was given to the API
  *
  * @apiSuccess {Object}  artist Artist object
  * @apiSuccess {String}  artist.name Artist's name
@@ -162,6 +168,9 @@ app.get('/infos/artist=:artist', function(req, res) {
  * @apiVersion  0.1.0
  *
  * @apiParam  {String} artist The artist name
+ *
+ * @apiError ArtistNotFound The given artist wasn't found
+ * @apiError NoPreview No top tracks has preview
  *
  * @apiSuccess {Object[]} tracks Array of tracks
  * @apiSuccess {String}   tracks.id Tracks's id
