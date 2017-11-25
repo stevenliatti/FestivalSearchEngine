@@ -1,120 +1,121 @@
 const express = require('express');
-const request = require('request');
+const app = express();
+const axios = require('axios');
 const Log = require("log");
 const log = new Log("debug");
-const app = express();
 const cors = require('cors');
 
 app.use(cors());
 
 const key_eventful = "WSpR5fzQ69N3w2FL";
-const url_eventful = "http://api.eventful.com/json/events/search?app_key=" + key_eventful +
-"&location=Switzerland&category=music,festivals_parades&page_size=100&date=future&sort_order";
-
-
-app.get('/events', function(req, res) {
-	let events = [];
-	request(url_eventful, function (error, response, body) {
-		if (error) {
-			log.error("Error : ", error);
-		}
-		else {
-			log.debug('statusCode:', response.statusCode);
-			if (body) {
-				let b = JSON.parse(body);
-				b.events.event.forEach(e => {
-					events.push({id : e.id, title: e.title, city_name: e.city_name});
-				});
-				let ret = {"error" : false, "error_message" : "", "events" : events};
-				res.type('json');
-				res.end(JSON.stringify(ret));
-			}
-			else {
-				log.error("eventful sucks");
-				res.type('json');
-				res.end(JSON.stringify({"error" : true, "error_message" : "eventful sucks", "events" : []}));
-			}
-		}
-	});
-});
+const events_search_eventful = "http://api.eventful.com/json/events/search";
+const page_size = 250;
 
 /**
  * @api {get} /events/artist=:artist?/location=:location? Return futur events in function of artist and location
  * @apiName GetEvents
  * @apiGroup events
  * @apiVersion  0.1.0
- *
- * @apiParam  {String} artist Optional artist name
- * @apiParam  {String} location Optional location name
- *
- * @apiError NoParam No location nor artist was given to the API
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError LocationNotFound The given location wasn't found
- *
- * @apiSuccess {Object[]} events Array of events
- * @apiSuccess {String}   events.id Event's id
- * @apiSuccess {String}   events.title Event's title
- * @apiSuccess {String}   events.venue Event's venue
- * @apiSuccess {String}   events.date Event's date, format : "YYYY-MM-DD hh:mm:ss"
- * @apiSuccess {String}   events.address Event's postal address
- * @apiSuccess {String}   events.city Event's city
- * @apiSuccess {String}   events.region Event's region
- * @apiSuccess {String}   events.postal_code Event's postal code
- * @apiSuccess {String}   events.latitude Event's latitude
- * @apiSuccess {String}   events.longitude Event's longitude
- * @apiSuccess {String}   events.offer Event's offer URL to buy ticket for example
- *
- * @apiSuccess {Object[]} events.performers Event's performers
- * @apiSuccess {String}   events.performers.name Performer's name
- * @apiSuccess {String}   events.performers.music_kind Performer's kind of music (short)
- * @apiSuccess {String}   events.performers.thumb Little image URL of the artist
- * @apiSuccess {String}   events.performers.image Image URL of the artist
- * @apiSuccess {String}   events.performers.facebook Facebook URL of the artist
- *
- * @apiParamExample  {json} Request-Example:
- * {
- *   "artist": "Metallica",
- *   "location": "Geneva"
- * }
- *
- * @apiSuccessExample {json} Success-Response:
- * {
- *   "events": [
- *     {
- *       "id": "42",
- *       "title": "Metallica",
- *       "venue": "Geneva Palexpo",
- *       "date": "2018-04-11 00:00:00",
- *       "address": "Case Postale 112 Grand-Saconnex",
- *       "city": "Geneva",
- *       "region": "Genève",
- *       "postal_code": "CH-1218",
- *       "latitude": "46.2",
- *       "longitude": "6.16667",
- *       "offer": "https://www.bandsintown.com/t/17938982?app_id=hehe&came_from=267",
- *       "performers": [
- *         {
- *           "name": "Metallica",
- *           "music_kind": "Metal / Rock",
- *           "thumb": "https://s3.amazonaws.com/bit-photos/thumb/6874519.jpeg",
- *           "image": "https://s3.amazonaws.com/bit-photos/large/6874519.jpeg",
- *           "facebook": ""
- *         }
- *       ]
- *     }
- *   ]
- * }
+ * 
+ * @apiUse DefGetEvents
  */
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
-	console.log(req.params);
+	log.debug(req.params);
 	let artist = req.params.artist;
 	let location = req.params.location;
 
 	if (artist == undefined && location == undefined) {
-		res.send({"events": {}});
+		log.error("NoParam");
+		res.type('json');		
+		res.send(JSON.stringify({"NoParam": true}));
 	}
 	else {
-		res.send({});
+		axios.get(events_search_eventful, {
+			params: {
+				app_key: key_eventful,
+				keywords: artist,
+				location: location,
+				category: "music,festivals_parades",
+				date: "future",
+				page_size: page_size,
+				count_only: true
+			}
+		})
+		.then(count => {
+			log.debug("in first ", count.data);
+
+			let items = parseInt(count.data.total_items);
+			let page_number = -1;
+			if (items >= 0) {
+				page_number = Math.ceil(items / page_size);
+
+				let params_array = [];
+				for (let i = 1; i <= page_number; i++) {
+					params_array.push({
+						params: {
+							app_key: key_eventful,
+							keywords: artist,
+							location: location,
+							category: "music,festivals_parades",
+							date: "future",
+							page_size: page_size,
+							page_number: i
+						}
+					});
+				}
+
+				let promise_array = params_array.map(p => axios.get(events_search_eventful, p));
+				axios.all(promise_array)
+				.then(function(results) {
+					let final_events = [];
+					let temp = results.map(r => r.data.events.event).forEach(events_set => {
+						events_set.forEach(event => {
+							if (event.performers != null) {
+								let performers = [];
+								if (Array.isArray(event.performers.performer)) {
+									event.performers.performer.forEach(p => {
+										performers.push({
+											name: p.name,
+											short_bio: p.short_bio
+										});
+									});
+								}
+								else {
+									performers.push({
+										name: event.performers.performer.name,
+										short_bio: event.performers.performer.short_bio
+									});
+								}
+								final_events.push({
+									id: event.id,
+									title: event.title,
+									venue: event.venue_name,
+									date: event.start_time,
+									address: event.venue_address,
+									city: event.city_name,
+									region: event.region_name,
+									postal_code: event.postal_code,
+									latitude: event.latitude,
+									longitude: event.longitude,
+									offer: event.url,
+									performers: performers
+								});
+							}
+						});
+					});
+					res.type('json');
+					res.end(JSON.stringify({events: final_events}));
+				})
+				.catch(errr => {
+					res.end({error: errr});
+					log.error(errr);
+				});
+			}
+		})
+		.catch(err => {
+			res.end({error: err});
+			log.error(err);
+		});
 	}
 });
 
@@ -124,38 +125,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiGroup infos
  * @apiVersion  0.1.0
  *
- * @apiParam  {String} artist Artist name
- *
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError NoArtist No artist was given to the API
- *
- * @apiSuccess {Object}  artist Artist object
- * @apiSuccess {String}  artist.name Artist's name
- * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
- * @apiSuccess {String}  artist.country Artist's country origin
- * @apiSuccess {String}  artist.disambiguation Artist's disambiguation = kind of music
- * @apiSuccess {Object}  artist.life_span Infos about life span of artist
- * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
- * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- *
- * @apiParamExample  {json} Request-Example:
- * {
- *   "artist": "Nirvana"
- * }
- *
- * @apiSuccessExample {json} Success-Response:
- * {
- *   "name": "Nirvana",
- *   "type": "Group",
- *   "country": "US",
- *   "disambiguation": "90s US grunge band",
- *   "life_span": {
- *      "ended": true,
- *      "begin": "1988-02",
- *      "end": "1994-04-05"
- *    },
- * }
+ * @apiUse DefGetInfos
  */
 app.get('/infos/artist=:artist', function(req, res) {
 
@@ -167,34 +137,7 @@ app.get('/infos/artist=:artist', function(req, res) {
  * @apiGroup tracks
  * @apiVersion  0.1.0
  *
- * @apiParam  {String} artist The artist name
- *
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError NoPreview No top tracks has preview
- *
- * @apiSuccess {Object[]} tracks Array of tracks
- * @apiSuccess {String}   tracks.id Tracks's id
- * @apiSuccess {String}   tracks.name Tracks's title
- * @apiSuccess {String}   tracks.album Name of the album the track's in
- * @apiSuccess {String}   tracks.preview_url URL of the track preview
- *
- *
- * @apiParamExample  {json} Request-Example:
- * {
- *   "artist": "Metallica"
- * }
- *
- * @apiSuccessExample {json} Success-Response:
- * {
- *   "tracks": [
- *     {
- *       "id": "42",
- *       "name": "Au pays des toupoutous",
- *		 "album": "Coucou les loulous",
- *       "preview_url": "www.republiquedesmangues.com"
- *     }
- *   ]
- * }
+ * @apiUse DefGetTracks
  */
 app.get('/tracks/artist=:artist', function(req, res) {
 
