@@ -17,6 +17,7 @@
  * @apiSuccess {String}   events.city Event's city
  * @apiSuccess {String}   events.region Event's region
  * @apiSuccess {String}   events.postal_code Event's postal code
+ * @apiSuccess {String}   events.country Event's country
  * @apiSuccess {String}   events.latitude Event's latitude
  * @apiSuccess {String}   events.longitude Event's longitude
  * @apiSuccess {String}   events.offer Event's offer URL to buy ticket for example
@@ -46,6 +47,7 @@
  *       "city": "Geneva",
  *       "region": "Genève",
  *       "postal_code": "CH-1218",
+ *       "country": "Switzerland",
  *       "latitude": "46.2",
  *       "longitude": "6.16667",
  *       "offer": "https://www.bandsintown.com/t/17938982?app_id=hehe&came_from=267",
