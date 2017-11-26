@@ -40,6 +40,7 @@ const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
  * @apiUse DefGetEvents
  */
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
+   log.debug("request url", req.url);
    log.debug("request params", req.params);
    const artist = req.params.artist;
    const location = req.params.location;
@@ -238,6 +239,8 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiUse DefGetInfos
  */
 app.get('/infos/artist=:artist', function(req, res) {
+   log.debug("request url", req.url);
+   log.debug("request params", req.params);
    const artist = req.params.artist;
    if (artist != undefined) {
       res.type('json');
@@ -263,6 +266,7 @@ app.get('/infos/artist=:artist', function(req, res) {
             thumb: response2.data.thumb_url,
             facebook: response2.data.facebook_page_url
          };
+         log.debug("infos\n", infos);
          res.end(JSON.stringify(infos));
       }))
       .catch(error => {
@@ -289,6 +293,8 @@ app.get('/infos/artist=:artist', function(req, res) {
  * @apiUse DefGetTracks
  */
 app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) {
+   log.debug("request url", req.url);
+   log.debug("request params", req.params);
    const artist = req.params.artist;
    const country_code = req.params.country_code;
    res.type('json');
@@ -315,6 +321,8 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
                popularity: track.popularity
             });
          })
+         log.debug("tracks\n", tracks);
+         log.debug("tracks length", tracks.length);
          res.end(JSON.stringify({tracks: tracks}));
       })
       .catch(error => {
