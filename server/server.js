@@ -28,74 +28,74 @@ const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
  * @apiUse DefGetEvents
  */
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
-	const artist = req.params.artist;
-	const location = req.params.location;
+   const artist = req.params.artist;
+   const location = req.params.location;
 
-	if (artist == undefined && location == undefined) {
-		log.error("NoParam");
-		res.type('json');		
-		res.end(JSON.stringify({"NoParam": true}));
-	}
-	else {
+   if (artist == undefined && location == undefined) {
+      log.error("NoParam");
+      res.type('json');
+      res.end(JSON.stringify({"NoParam": true}));
+   }
+   else {
       let events = [];
 
       // First get request to obtain pages number
       // of eventful data
-		axios.get(events_search_eventful, {
-			params: {
-				app_key: key_eventful,
-				keywords: artist,
-				location: location,
-				category: "music,festivals_parades",
+      axios.get(events_search_eventful, {
+         params: {
+            app_key: key_eventful,
+            keywords: artist,
+            location: location,
+            category: "music,festivals_parades",
             date: "future",
             sort_order: "popularity",
-				page_size: page_size,
-				count_only: true
-			}
-		})
-		.then(count => {
-			let items = parseInt(count.data.total_items);
+            page_size: page_size,
+            count_only: true
+         }
+      })
+      .then(count => {
+         let items = parseInt(count.data.total_items);
          let page_number = -1;
-         res.type('json');         
+         res.type('json');
 
-			if (items >= 0) {
+         if (items >= 0) {
             // If there is items, an array of params of get URL
             // is created, for every page of eventful, a request
             // will be send
-				page_number = Math.ceil(items / page_size);
-				let params_array = [];
-				for (let i = 1; i <= page_number; i++) {
-					params_array.push({
-						params: {
-							app_key: key_eventful,
-							keywords: artist,
-							location: location,
-							category: "music,festivals_parades",
+            page_number = Math.ceil(items / page_size);
+            let params_array = [];
+            for (let i = 1; i <= page_number; i++) {
+               params_array.push({
+                  params: {
+                     app_key: key_eventful,
+                     keywords: artist,
+                     location: location,
+                     category: "music,festivals_parades",
                      date: "future",
                      sort_order: "popularity",
-							page_size: page_size,
-							page_number: i
-						}
-					});
-				}
+                     page_size: page_size,
+                     page_number: i
+                  }
+               });
+            }
 
             // With axios, we can perform multiple requests and 
             // process them all when they are all finished
-				let promise_array = params_array.map(p => axios.get(events_search_eventful, p));
-				axios.all(promise_array)
-				.then(results => {
+            let promise_array = params_array.map(p => axios.get(events_search_eventful, p));
+            axios.all(promise_array)
+            .then(results => {
                // Eventfull processing
-					results.map(r => r.data.events.event).forEach(events_set => {
-						events_set.forEach(event => {
-							if (event.performers != null) {
+               results.map(r => r.data.events.event).forEach(events_set => {
+                  events_set.forEach(event => {
+                     if (event.performers != null) {
                         let performers = [];
                         let contains = false;
 
                         // performers property of eventful is a little dumb
                         // I think, if multiple performers it's an array, 
                         // else only one object
-								if (Array.isArray(event.performers.performer)) {
-									event.performers.performer.forEach(p => {
+                        if (Array.isArray(event.performers.performer)) {
+                           event.performers.performer.forEach(p => {
                               // eventful keywords is not really top for this 
                               // case, it match too many results with an artist name,
                               // it checks his description of events. We are only 
@@ -108,9 +108,9 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                                  });
                                  contains = true;
                               }
-									});
-								}
-								else {
+                           });
+                        }
+                        else {
                            let perf = event.performers.performer;
                            if ((artist != undefined && perf.name.includes(artist)) || artist == undefined) {
                               performers.push({
@@ -138,8 +138,8 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                               performers: performers
                            });
                         }
-							}
-						});
+                     }
+                  });
                });
                
                // BandsInTown comes into play
@@ -154,7 +154,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                         });
                      });
 
-                     res.end(JSON.stringify({events: events}));                     
+                     res.end(JSON.stringify({events: events}));
                   })
                   .catch(err => {
                      res.end({error: err});
@@ -162,7 +162,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                   });
                }
                else {
-                  res.end(JSON.stringify({events: events}));                  
+                  res.end(JSON.stringify({events: events}));
 
                   // it's a mess to set data from BandsInTown
                   // if artist is undefined, to discuss
@@ -198,18 +198,18 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                   //    log.error(err);
                   // });
                }
-				})
-				.catch(err => {
-					res.end({error: err});
-					log.error(err);
-				});
+            })
+            .catch(err => {
+               res.end({error: err});
+               log.error(err);
+            });
          }
-		})
-		.catch(err => {
-			res.end({error: err});
-			log.error(err);
-		});
-	}
+      })
+      .catch(err => {
+         res.end({error: err});
+         log.error(err);
+      });
+   }
 });
 
 /**
@@ -253,8 +253,8 @@ app.get('/infos/artist=:artist', function(req, res) {
    }
    else {
       log.error("NoArtist");
-		res.type('json');
-		res.end(JSON.stringify({"NoArtist": true}));
+      res.type('json');
+      res.end(JSON.stringify({"NoArtist": true}));
    }
 });
 
