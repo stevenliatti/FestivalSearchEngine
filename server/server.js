@@ -1,26 +1,38 @@
 const express = require('express');
 const app = express();
+
 const axios = require('axios');
+
 const Log = require("log");
 const log = new Log("debug");
-const cors = require('cors');
 
+const cors = require('cors');
 app.use(cors());
+
+const SpotifyWebApi = require('spotify-web-api-node');
+const clientId = 'bfa3df6d31284912b0ed76fa6c5673b5';
+const clientSecret = '523fc42e0bf94723b542930fbe5cf38e';
+// Create the api object with the credentials
+const spotifyApi = new SpotifyWebApi({
+   clientId : clientId,
+   clientSecret : clientSecret
+});
 
 const key_eventful = "WSpR5fzQ69N3w2FL";
 const events_search_eventful = "http://api.eventful.com/json/events/search";
 const page_size = 250;
 
 const bands_in_town_url = "https://rest.bandsintown.com/artists/";
-
-function url_bands_in_town(artist, app_id) {
+let url_bands_in_town = function(artist, app_id) {
    return bands_in_town_url + artist + "?app_id=" + app_id;
-}
+};
 
 const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
 
 /**
- * @api {get} /events/artist=:artist?/location=:location? Return futur events in function of artist and location
+ * @api {get} /events/artist=:artist?/location=:location? 
+ * Return futur events in function of artist and location
+ * 
  * @apiName GetEvents
  * @apiGroup events
  * @apiVersion  0.1.0
@@ -28,13 +40,14 @@ const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
  * @apiUse DefGetEvents
  */
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
+   log.debug("request params", req.params);
    const artist = req.params.artist;
    const location = req.params.location;
 
    if (artist == undefined && location == undefined) {
       log.error("NoParam");
       res.type('json');
-      res.end(JSON.stringify({"NoParam": true}));
+      res.end(JSON.stringify({NoParam: true}));
    }
    else {
       let events = [];
@@ -156,9 +169,9 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
 
                      res.end(JSON.stringify({events: events}));
                   })
-                  .catch(err => {
-                     res.end({error: err});
-                     log.error(err);
+                  .catch(error => {
+                     res.end({error: error});
+                     log.error(error);
                   });
                }
                else {
@@ -198,22 +211,26 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                   //    log.error(err);
                   // });
                }
+               log.debug("events\n", events);
+               log.debug("events length", events.length);
             })
-            .catch(err => {
-               res.end({error: err});
-               log.error(err);
+            .catch(error => {
+               res.end({error: error});
+               log.error(error);
             });
          }
       })
-      .catch(err => {
-         res.end({error: err});
-         log.error(err);
+      .catch(error => {
+         res.end({error: error});
+         log.error(error);
       });
    }
 });
 
 /**
- * @api {get} /infos/artist=:artist Return infos of the artist
+ * @api {get} /infos/artist=:artist 
+ * Return infos of the artist
+ * 
  * @apiName GetInfos
  * @apiGroup infos
  * @apiVersion  0.1.0
@@ -227,7 +244,8 @@ app.get('/infos/artist=:artist', function(req, res) {
       axios.all([
          axios.get(music_brainz_url + artist),
          axios.get(url_bands_in_town(artist, "asdf"))
-      ]).then(axios.spread((response1, response2) => {
+      ])
+      .then(axios.spread((response1, response2) => {
          let infos = {
             name: response1.data.artists[0].name,
             type: response1.data.artists[0].type,
@@ -246,7 +264,8 @@ app.get('/infos/artist=:artist', function(req, res) {
             facebook: response2.data.facebook_page_url
          };
          res.end(JSON.stringify(infos));
-      })).catch(error => {
+      }))
+      .catch(error => {
          log.error(error);
          res.end(JSON.stringify({ArtistNotFound: true}));
       });
@@ -254,20 +273,59 @@ app.get('/infos/artist=:artist', function(req, res) {
    else {
       log.error("NoArtist");
       res.type('json');
-      res.end(JSON.stringify({"NoArtist": true}));
+      res.end(JSON.stringify({NoArtist: true}));
    }
 });
 
 /**
- * @api {get} /tracks/artist=:artist Return the top-tracks infos for this artist. Also contains the track preview's URL
+ * @api {get} /tracks/artist=:artist/country_code=:country_code
+ * Return the top-tracks infos for this artist and country code.
+ * Also contains the track preview's URL if existent.
+ * 
  * @apiName GetTracks
  * @apiGroup tracks
  * @apiVersion  0.1.0
  *
  * @apiUse DefGetTracks
  */
-app.get('/tracks/artist=:artist', function(req, res) {
+app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) {
+   const artist = req.params.artist;
+   const country_code = req.params.country_code;
+   res.type('json');
 
+   if (artist != undefined && country_code != undefined) {
+      spotifyApi.clientCredentialsGrant()
+      .then(data => {
+         spotifyApi.setAccessToken(data.body['access_token']);
+         return spotifyApi.searchArtists(artist);
+      })
+      .then(data => {
+         log.debug(spotifyApi.getAccessToken());
+         const spotify_artist = data.body.artists.items[0];
+         return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
+      })
+      .then(data => {
+         let tracks = [];
+         data.body.tracks.forEach(track => {
+            tracks.push({
+               id: track.id,
+               name: track.name,
+               album: track.album.name,
+               preview_url: track.preview_url,
+               popularity: track.popularity
+            });
+         })
+         res.end(JSON.stringify({tracks: tracks}));
+      })
+      .catch(error => {
+         log.error(error);
+         res.end(JSON.stringify({ArtistNotFound: true}));
+      });
+   }
+   else {
+      log.error("NoArtist");
+      res.end(JSON.stringify({NoArtist: true}));
+   }
 });
 
 app.listen(8080);

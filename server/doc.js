@@ -109,8 +109,10 @@
  * @apiDefine DefGetTracks
  *
  * @apiParam  {String} artist The artist name
+ * @apiParam  {String} country_code The country's code (ISO 3166-1 alpha-2)
  *
  * @apiError ArtistNotFound The given artist wasn't found
+ * @apiError NoArtist No artist was given to the API 
  * @apiError NoPreview No top tracks has preview
  *
  * @apiSuccess {Object[]} tracks Array of tracks
@@ -118,21 +120,24 @@
  * @apiSuccess {String}   tracks.name Tracks's title
  * @apiSuccess {String}   tracks.album Name of the album the track's in
  * @apiSuccess {String}   tracks.preview_url URL of the track preview
+ * @apiSuccess {Number}   tracks.popularity Spotify's popularity rank
  *
  *
  * @apiParamExample  {json} Request-Example:
  * {
- *   "artist": "Metallica"
+ *   "artist": "Metallica",
+ *   "country_code": "US"
  * }
  *
  * @apiSuccessExample {json} Success-Response:
  * {
  *   "tracks": [
  *     {
- *       "id": "42",
- *       "name": "Au pays des toupoutous",
- *		 "album": "Coucou les loulous",
- *       "preview_url": "www.republiquedesmangues.com"
+ *       "id": "10igKaIKsSB6ZnWxPxPvKO",
+ *       "name": "Nothing Else Matters",
+ *       "album": "Metallica",
+ *       "preview_url": "https://p.scdn.co/mp3-preview/a2a9c13416fc981d035e75f16ec63b0d8e6486ba?cid=bfa3df6d31284912b0ed76fa6c5673b5",
+ *       "popularity": 68
  *     }
  *   ]
  * }
