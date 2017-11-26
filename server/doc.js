@@ -82,6 +82,9 @@
  * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
  * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
  * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}  artist.image Image URL
+ * @apiSuccess {String}  artist.thumb Thumb URL
+ * @apiSuccess {String}  artist.facebook Facebook URL
  *
  * @apiParamExample  {json} Request-Example:
  * {

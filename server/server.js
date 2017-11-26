@@ -17,6 +17,8 @@ function url_bands_in_town(artist, app_id) {
    return bands_in_town_url + artist + "?app_id=" + app_id;
 }
 
+const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
+
 /**
  * @api {get} /events/artist=:artist?/location=:location? Return futur events in function of artist and location
  * @apiName GetEvents
@@ -26,8 +28,8 @@ function url_bands_in_town(artist, app_id) {
  * @apiUse DefGetEvents
  */
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
-	let artist = req.params.artist;
-	let location = req.params.location;
+	const artist = req.params.artist;
+	const location = req.params.location;
 
 	if (artist == undefined && location == undefined) {
 		log.error("NoParam");
@@ -78,7 +80,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
 				}
 
             // With axios, we can perform multiple requests and 
-            // process them all when all are finished
+            // process them all when they are all finished
 				let promise_array = params_array.map(p => axios.get(events_search_eventful, p));
 				axios.all(promise_array)
 				.then(results => {
@@ -219,7 +221,41 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
  * @apiUse DefGetInfos
  */
 app.get('/infos/artist=:artist', function(req, res) {
+   const artist = req.params.artist;
+   if (artist != undefined) {
+      res.type('json');
+      axios.all([
+         axios.get(music_brainz_url + artist),
+         axios.get(url_bands_in_town(artist, "asdf"))
+      ]).then(axios.spread((response1, response2) => {
+         let infos = {
+            name: response1.data.artists[0].name,
+            type: response1.data.artists[0].type,
+            country: response1.data.artists[0].country,
+            disambiguation: response1.data.artists[0].disambiguation,
+            // See later, ReferenceError: span is not defined ???
+            // He doesn't like the "-" in "life-span"
 
+            // life_span: {
+            //    ended: response1.data.artists[0].life-span.ended,
+            //    begin: response1.data.artists[0].life-span.begin,
+            //    end: response1.data.artists[0].life-span.end
+            // }
+            image: response2.data.image_url,
+            thumb: response2.data.thumb_url,
+            facebook: response2.data.facebook_page_url
+         };
+         res.end(JSON.stringify(infos));
+      })).catch(error => {
+         log.error(error);
+         res.end(JSON.stringify({ArtistNotFound: true}));
+      });
+   }
+   else {
+      log.error("NoArtist");
+		res.type('json');
+		res.end(JSON.stringify({"NoArtist": true}));
+   }
 });
 
 /**
