@@ -12,8 +12,10 @@
 <body>
 	<h1>Festival Search Engine</h1>
 	<div id="search">
-		<form action="index.html" method="get">
-			<input type="text" value="Search the base" name="searchQuery" />
+		<form id="searchForm" action="index.html" method="get">
+			<input type="text" placeholder="Search an artist" name="artistQuery">
+			<input type="text" placeholder="Search a location" name="locationQuery">
+			<input type="submit" class="hidden" tabindex="-1">
 		</form>
 	</div>
 	<div id="map"></div>
@@ -29,15 +31,27 @@
 		};
 
 		function addMarkers() {
-			$.getJSON("http://localhost:8080/events")
+			var artistQuery = getURLParameters("artistQuery");
+			var locationQuery = getURLParameters("locationQuery");
+			var JSONQuery;
+			if(artistQuery === undefined && locationQuery === undefined)
+				JSONQuery = "http://localhost:8080/events/artist=/location=Switzerland";
+			else if(artistQuery === undefined)
+				JSONQuery = "http://localhost:8080/events/artist=/location=" + locationQuery + "";
+			else if(locationQuery === undefined)
+				JSONQuery = "http://localhost:8080/events/artist=" + artistQuery + "/location=";
+			else
+				JSONQuery = "http://localhost:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
+			console.log(JSONQuery);
+			$.getJSON(JSONQuery)
 			.done(function(response) {
 				if (response.error) {
 					console.log("server has an error : ", response.error_message);
 				}
 				else {
-					let markers = [];
+					var markers = [];
 					response.events.forEach(function (event) {
-						$.getJSON("https://maps.googleapis.com/maps/api/geocode/json?address=" + event.city_name + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA", function(data) {
+						$.getJSON("https://maps.googleapis.com/maps/api/geocode/json?address=" + event.city + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA", function(data) {
 							markers.push(new google.maps.Marker({
 								position: data.results[0].geometry.location,
 								map: map,
@@ -52,6 +66,19 @@
 			.fail(function(error) {
 				console.log("error in events request : ", error);
 			});
+		};
+
+		function getURLParameters(param) {
+			var brutData = decodeURIComponent(window.location.search.substring(1));
+			var URLVariables = brutData.split("&");
+			var i;
+			for(i = 0 ; i < URLVariables.length ; i++) {
+				var URLParameter = URLVariables[i].split("=");
+				if(URLParameter[0] === param)
+					return URLParameter[1];
+			}
+
+			return undefined;
 		};
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA&callback=initMap" async defer></script>
