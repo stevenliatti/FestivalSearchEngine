@@ -114,7 +114,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                               // it checks his description of events. We are only 
                               // interested by the name of performers. So we check
                               // if the name is include in performers name.
-                              if ((artist != undefined && p.name.includes(artist)) || artist == undefined) {
+                              if ((artist != undefined && p.name.toLowerCase().includes(artist.toLowerCase())) || artist == undefined) {
                                  performers.push({
                                     name: p.name,
                                     short_bio: p.short_bio
@@ -125,7 +125,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                         }
                         else {
                            let perf = event.performers.performer;
-                           if ((artist != undefined && perf.name.includes(artist)) || artist == undefined) {
+                           if ((artist != undefined && perf.name.toLowerCase().includes(artist.toLowerCase())) || artist == undefined) {
                               performers.push({
                                  name: perf.name,
                                  short_bio: perf.short_bio
