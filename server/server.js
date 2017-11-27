@@ -254,14 +254,11 @@ app.get('/infos/artist=:artist', function(req, res) {
             type: response1.data.artists[0].type,
             country: response1.data.artists[0].country,
             disambiguation: response1.data.artists[0].disambiguation,
-            // See later, ReferenceError: span is not defined ???
-            // He doesn't like the "-" in "life-span"
-
-            // life_span: {
-            //    ended: response1.data.artists[0].life-span.ended,
-            //    begin: response1.data.artists[0].life-span.begin,
-            //    end: response1.data.artists[0].life-span.end
-            // }
+            life_span: {
+               ended: response1.data.artists[0]["life-span"].ended,
+               begin: response1.data.artists[0]["life-span"].begin,
+               end: response1.data.artists[0]["life-span"].end
+            },
             image: response2.data.image_url,
             thumb: response2.data.thumb_url,
             facebook: response2.data.facebook_page_url
@@ -308,6 +305,7 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
       .then(data => {
          log.debug(spotifyApi.getAccessToken());
          const spotify_artist = data.body.artists.items[0];
+         // log.debug(spotify_artist);
          return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
       })
       .then(data => {
