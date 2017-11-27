@@ -280,8 +280,11 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
          return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
       })
       .then(data => {
+         let preview = false;
+
          let tracks = [];
          data.body.tracks.forEach(track => {
+            preview = track.preview_url != null ? true : false;
             tracks.push({
                id: track.id,
                name: track.name,
@@ -289,10 +292,17 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
                preview_url: track.preview_url,
                popularity: track.popularity
             });
-         })
-         log.debug("tracks\n", tracks);
-         log.debug("tracks length", tracks.length);
-         res.status(200).end(JSON.stringify({tracks: tracks}));
+         });
+
+         if (preview) {
+            log.debug("tracks\n", tracks);
+            log.debug("tracks length", tracks.length);
+            res.status(200).end(JSON.stringify({tracks: tracks}));
+         }
+         else {
+            log.error("preview_not_found");
+            res.status(404).end(JSON.stringify({preview_not_found: true}));
+         }
       })
       .catch(error => {
          log.error(error);
