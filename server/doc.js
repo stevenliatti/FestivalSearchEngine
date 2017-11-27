@@ -4,9 +4,8 @@
  * @apiParam  {String} artist Optional artist name
  * @apiParam  {String} location Optional location name
  *
- * @apiError NoParam No location nor artist was given to the API
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError LocationNotFound The given location wasn't found
+ * @apiError no_param_provided No location nor artist was given to the API
+ * @apiError artist_or_location_not_found The given artist or location wasn't found
  *
  * @apiSuccess {Object[]} events Array of events
  * @apiSuccess {String}   events.id Event's id
@@ -36,6 +35,7 @@
  * }
  *
  * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
  * {
  *   "events": [
  *     {
@@ -70,8 +70,8 @@
  *
  * @apiParam  {String} artist Artist name
  *
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError NoArtist No artist was given to the API
+ * @apiError artist_not_found The given artist wasn't found
+ * @apiError no_artist_provided No artist was given to the API
  *
  * @apiSuccess {Object}  artist Artist object
  * @apiSuccess {String}  artist.name Artist's name
@@ -92,16 +92,22 @@
  * }
  *
  * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
  * {
- *   "name": "Nirvana",
- *   "type": "Group",
- *   "country": "US",
- *   "disambiguation": "90s US grunge band",
- *   "life_span": {
- *      "ended": true,
- *      "begin": "1988-02",
- *      "end": "1994-04-05"
- *    },
+ *   infos : {
+ *     "name": "Nirvana",
+ *     "type": "Group",
+ *     "country": "US",
+ *     "disambiguation": "90s US grunge band",
+ *     "life_span": {
+ *        "ended": true,
+ *        "begin": "1988-02",
+ *        "end": "1994-04-05"
+ *      },
+ *      "image": "https://s3.amazonaws.com/bit-photos/large/267414.jpeg",
+ *      "thumb": "https://s3.amazonaws.com/bit-photos/thumb/267414.jpeg",
+ *      "facebook": "https://www.facebook.com/pages/Nervana/409308175799582"
+ *   }
  * }
  */
 
@@ -111,9 +117,9 @@
  * @apiParam  {String} artist The artist name
  * @apiParam  {String} country_code The country's code (ISO 3166-1 alpha-2)
  *
- * @apiError ArtistNotFound The given artist wasn't found
- * @apiError NoArtist No artist was given to the API 
- * @apiError NoPreview No top tracks has preview
+ * @apiError artist_not_found The given artist wasn't found
+ * @apiError no_artist_provided No artist was given to the API 
+ * @apiError preview_not_found No top tracks has preview
  *
  * @apiSuccess {Object[]} tracks Array of tracks
  * @apiSuccess {String}   tracks.id Tracks's id
@@ -130,6 +136,7 @@
  * }
  *
  * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
  * {
  *   "tracks": [
  *     {

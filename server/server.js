@@ -44,11 +44,11 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
    log.debug("request params", req.params);
    const artist = req.params.artist;
    const location = req.params.location;
+   res.type('json');
 
    if (artist == undefined && location == undefined) {
-      log.error("NoParam");
-      res.type('json');
-      res.end(JSON.stringify({NoParam: true}));
+      log.error("no_param_provided");
+      res.status(404).end(JSON.stringify({no_param_provided: true}));
    }
    else {
       let events = [];
@@ -70,7 +70,6 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
       .then(count => {
          let items = parseInt(count.data.total_items);
          let page_number = -1;
-         res.type('json');
 
          if (items >= 0) {
             // If there is items, an array of params of get URL
@@ -135,6 +134,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                            }
                         }
 
+                        // Construction of object response
                         if (contains) {
                            events.push({
                               id: event.id,
@@ -168,61 +168,27 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                         });
                      });
 
-                     res.end(JSON.stringify({events: events}));
+                     res.status(200).end(JSON.stringify({events: events}));
                   })
                   .catch(error => {
-                     res.end({error: error});
+                     res.status(404).end({artist_or_location_not_found: error});
                      log.error(error);
                   });
                }
                else {
-                  res.end(JSON.stringify({events: events}));
-
-                  // it's a mess to set data from BandsInTown
-                  // if artist is undefined, to discuss
-                  // Maybe set this infos in route 'infos'
-
-                  // let names = new Set();
-                  // events.forEach(event => {
-                  //    event.performers.forEach(perf => {
-                  //       log.debug(perf.name);
-                  //       names.add(perf.name);
-                  //    });
-                  // });
-
-                  // log.debug(names);
-                  // let promise_array = [];
-                  // names.forEach(name => {
-                  //    promise_array.push(axios.get(url_bands_in_town(name, "asdf")));
-                  // });
-                  // log.debug(promise_array);               
-                  // axios.all(promise_array)
-                  // .then(results => {
-                  //    results.map(resp => resp.data).forEach(events_set => {
-                  //       events.forEach(event => {
-                  //          event.performers.thumb = resp.thumb_url;
-                  //          event.performers.image = resp.image_url;
-                  //          event.performers.facebook = resp.facebook_page_url;
-                  //       });
-                  //    });
-                  //    res.end(JSON.stringify({events: events}));
-                  // })
-                  // .catch(err => {
-                  //    res.end({error: err});
-                  //    log.error(err);
-                  // });
+                  res.status(200).end(JSON.stringify({events: events}));
                }
                log.debug("events\n", events);
                log.debug("events length", events.length);
             })
             .catch(error => {
-               res.end({error: error});
+               res.status(404).end({artist_or_location_not_found: error});
                log.error(error);
             });
          }
       })
       .catch(error => {
-         res.end({error: error});
+         res.status(404).end({artist_or_location_not_found: error});
          log.error(error);
       });
    }
@@ -242,39 +208,44 @@ app.get('/infos/artist=:artist', function(req, res) {
    log.debug("request url", req.url);
    log.debug("request params", req.params);
    const artist = req.params.artist;
+   res.type('json');
+
    if (artist != undefined) {
-      res.type('json');
       axios.all([
          axios.get(music_brainz_url + artist),
          axios.get(url_bands_in_town(artist, "asdf"))
       ])
-      .then(axios.spread((response1, response2) => {
+      .then(axios.spread((mb, bit) => {
+         const mb_artist = mb.data.artists[0];
+         const life_span = mb_artist["life-span"];
          let infos = {
-            name: response1.data.artists[0].name,
-            type: response1.data.artists[0].type,
-            country: response1.data.artists[0].country,
-            disambiguation: response1.data.artists[0].disambiguation,
+            name: mb_artist.name,
+            type: mb_artist.type,
+            country: mb_artist.country ? mb_artist.country : null,
+            disambiguation: mb_artist.disambiguation ? mb_artist.disambiguation : null,
             life_span: {
-               ended: response1.data.artists[0]["life-span"].ended,
-               begin: response1.data.artists[0]["life-span"].begin,
-               end: response1.data.artists[0]["life-span"].end
+               ended: life_span.ended ? life_span.ended : null,
+               begin: life_span.begin ? life_span.begin : null,
+               end: life_span.end ? life_span.end : null
             },
-            image: response2.data.image_url,
-            thumb: response2.data.thumb_url,
-            facebook: response2.data.facebook_page_url
+            image: bit.data.image_url,
+            thumb: bit.data.thumb_url,
+            facebook: bit.data.facebook_page_url
          };
          log.debug("infos\n", infos);
-         res.end(JSON.stringify(infos));
+         res.status(200).end(JSON.stringify({infos: infos}));
       }))
       .catch(error => {
          log.error(error);
-         res.end(JSON.stringify({ArtistNotFound: true}));
+         res.status(404).end(JSON.stringify({
+            artist_not_found: error,
+            artist_request: artist
+         }));
       });
    }
    else {
-      log.error("NoArtist");
-      res.type('json');
-      res.end(JSON.stringify({NoArtist: true}));
+      log.error("no_artist_provided");
+      res.status(404).end(JSON.stringify({no_artist_provided: true}));
    }
 });
 
@@ -321,16 +292,16 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
          })
          log.debug("tracks\n", tracks);
          log.debug("tracks length", tracks.length);
-         res.end(JSON.stringify({tracks: tracks}));
+         res.status(200).end(JSON.stringify({tracks: tracks}));
       })
       .catch(error => {
          log.error(error);
-         res.end(JSON.stringify({ArtistNotFound: true}));
+         res.status(404).end(JSON.stringify({artist_not_found: error}));
       });
    }
    else {
-      log.error("NoArtist");
-      res.end(JSON.stringify({NoArtist: true}));
+      log.error("no_artist_provided");
+      res.status(404).end(JSON.stringify({no_artist_provided: true}));
    }
 });
 
