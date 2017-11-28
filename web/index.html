@@ -18,8 +18,14 @@
 			<input type="submit" class="hidden" tabindex="-1">
 		</form>
 	</div>
+	<span id="loading"><center><strong>Loading...</strong></center></span>
 	<div id="map"></div>
+	<div id="markerInfo">
+		<p>Artist image and shit</p>
+		<img src="http://www.designformusic.com/wp-content/uploads/2015/10/insurgency-digital-album-cover-design.jpg">
+	</div>
 	<script>
+		$("#markerInfo").hide();
 		let map;
 		function initMap() {
 			map = new google.maps.Map(document.getElementById("map"), {
@@ -51,21 +57,49 @@
 				else {
 					var markers = [];
 					response.events.forEach(function (event) {
-						$.getJSON("https://maps.googleapis.com/maps/api/geocode/json?address=" + event.city + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA", function(data) {
-							markers.push(new google.maps.Marker({
-								position: data.results[0].geometry.location,
+						var location = {
+							lat: parseFloat(event.latitude),
+							lng: parseFloat(event.longitude)
+						};
+						var marker = new google.maps.Marker({
+								position: location,
 								map: map,
 								title: event.title
-							}));
+							});
+							var contentString = "<strong>Event info</strong><table>";
+							event.performers.forEach(function(artist) {
+								contentString += "<tr><th>Artist</th><td>" + artist.name + "</td></tr>";
+								if(artist.short_bio != undefined)
+									contentString += "<tr><th>Style / Bio</th><td>" + artist.short_bio + "</td></tr>";
+							});
+							contentString += "</table>";
+							var infowindow = new google.maps.InfoWindow({
+          						content: contentString
+        					});
 
-							console.log("markers " + event.title + " in " + event.city_name);
-						});
+							marker.addListener("click", function(){
+								getArtistInfo();
+							});
+							marker.addListener("mouseover", function(){
+								infowindow.open(map, marker);
+							})
+							marker.addListener("mouseout", function(){
+								infowindow.close();
+							})
+							markers.push(marker);
+
+							console.log("markers " + event.title + " in " + event.city);
 					});
 				}
+				$("#loading").hide();
 			})
 			.fail(function(error) {
 				console.log("error in events request : ", error);
 			});
+		};
+
+		function getArtistInfo() {
+			$("#markerInfo").slideDown();
 		};
 
 		function getURLParameters(param) {
