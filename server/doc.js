@@ -7,7 +7,7 @@
  * @apiError no_param_provided No location nor artist was given to the API
  * @apiError artist_or_location_not_found The given artist or location wasn't found
  *
- * @apiSuccess {Object[]} events Array of events
+ * @apiSuccess {Object[]} events Array of events (it can be empty)
  * @apiSuccess {String}   events.id Event's id
  * @apiSuccess {String}   events.title Event's title
  * @apiSuccess {String}   events.venue Event's venue
@@ -118,7 +118,7 @@
  * @apiParam  {String} country_code The country's code (ISO 3166-1 alpha-2)
  *
  * @apiError artist_not_found The given artist wasn't found
- * @apiError no_artist_provided No artist was given to the API 
+ * @apiError no_artist_and_code_provided No artist and code was given to the API 
  * @apiError preview_not_found No top tracks has preview
  *
  * @apiSuccess {Object[]} tracks Array of tracks

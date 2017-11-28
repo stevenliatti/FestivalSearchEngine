@@ -1,3 +1,5 @@
+const diacritics = require('./replace-diacritics');
+
 const express = require('express');
 const app = express();
 
@@ -8,6 +10,14 @@ const log = new Log("debug");
 
 const cors = require('cors');
 app.use(cors());
+
+const MongoClient = require('mongodb').MongoClient;
+const mongo_url = 'mongodb://localhost:27017/fse';
+
+MongoClient.connect(mongo_url, function(err, db) {
+   console.log("Connected successfully to mongodb server");
+   db.close();
+});
 
 const SpotifyWebApi = require('spotify-web-api-node');
 const clientId = 'bfa3df6d31284912b0ed76fa6c5673b5';
@@ -42,8 +52,8 @@ const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
 app.get('/events/artist=:artist?/location=:location?', function(req, res) {
    log.debug("request url", req.url);
    log.debug("request params", req.params);
-   const artist = req.params.artist;
-   const location = req.params.location;
+   let artist = req.params.artist;
+   let location = req.params.location;
    res.type('json');
 
    if (artist == undefined && location == undefined) {
@@ -52,6 +62,8 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
    }
    else {
       let events = [];
+      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
+      location = location != undefined ? diacritics.replaceDiacritics(location).toLowerCase() : undefined;
 
       // First get request to obtain pages number
       // of eventful data
@@ -114,7 +126,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                               // it checks his description of events. We are only 
                               // interested by the name of performers. So we check
                               // if the name is include in performers name.
-                              if ((artist != undefined && p.name.toLowerCase().includes(artist.toLowerCase())) || artist == undefined) {
+                              if ((artist != undefined && p.name.toLowerCase().includes(artist)) || artist == undefined) {
                                  performers.push({
                                     name: p.name,
                                     short_bio: p.short_bio
@@ -125,7 +137,7 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
                         }
                         else {
                            let perf = event.performers.performer;
-                           if ((artist != undefined && perf.name.toLowerCase().includes(artist.toLowerCase())) || artist == undefined) {
+                           if ((artist != undefined && perf.name.toLowerCase().includes(artist)) || artist == undefined) {
                               performers.push({
                                  name: perf.name,
                                  short_bio: perf.short_bio
@@ -207,10 +219,12 @@ app.get('/events/artist=:artist?/location=:location?', function(req, res) {
 app.get('/infos/artist=:artist', function(req, res) {
    log.debug("request url", req.url);
    log.debug("request params", req.params);
-   const artist = req.params.artist;
+   let artist = req.params.artist;
    res.type('json');
 
    if (artist != undefined) {
+      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
+
       axios.all([
          axios.get(music_brainz_url + artist),
          axios.get(url_bands_in_town(artist, "asdf"))
@@ -263,11 +277,14 @@ app.get('/infos/artist=:artist', function(req, res) {
 app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) {
    log.debug("request url", req.url);
    log.debug("request params", req.params);
-   const artist = req.params.artist;
-   const country_code = req.params.country_code;
+   let artist = req.params.artist;
+   let country_code = req.params.country_code;
    res.type('json');
 
    if (artist != undefined && country_code != undefined) {
+      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
+      country_code = country_code != undefined ? diacritics.replaceDiacritics(country_code).toLowerCase() : undefined;
+
       spotifyApi.clientCredentialsGrant()
       .then(data => {
          spotifyApi.setAccessToken(data.body['access_token']);
@@ -310,8 +327,8 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
       });
    }
    else {
-      log.error("no_artist_provided");
-      res.status(404).end(JSON.stringify({no_artist_provided: true}));
+      log.error("no_artist_and_code_provided");
+      res.status(404).end(JSON.stringify({no_artist_and_code_provided: true}));
    }
 });
 
