@@ -1,374 +1,182 @@
-const diacritics = require('./replace-diacritics');
+const consts = require('./consts');
+const use = require('./use');
+const events = require('./events');
+const infos = require('./infos');
+const tracks = require('./tracks');
 
-const express = require('express');
-const app = express();
-
-const axios = require('axios');
-
-const Log = require("log");
-const log = new Log("debug");
-
-const cors = require('cors');
 app.use(cors());
-
-// const MongoClient = require('mongodb').MongoClient;
-// const mongo_url = 'mongodb://localhost:27017/fse';
-
-// MongoClient.connect(mongo_url, function(err, db) {
-//    console.log("Connected successfully to mongodb server");
-//    db.close();
-// });
-
-const SpotifyWebApi = require('spotify-web-api-node');
-const clientId = 'bfa3df6d31284912b0ed76fa6c5673b5';
-const clientSecret = '523fc42e0bf94723b542930fbe5cf38e';
-// Create the api object with the credentials
-const spotifyApi = new SpotifyWebApi({
-   clientId : clientId,
-   clientSecret : clientSecret
-});
-
-const key_eventful = "WSpR5fzQ69N3w2FL";
-const events_search_eventful = "http://api.eventful.com/json/events/search";
-const page_size = 250;
-
-const bands_in_town_url = "https://rest.bandsintown.com/artists/";
-let url_bands_in_town = function(artist, app_id) {
-   return bands_in_town_url + artist + "?app_id=" + app_id;
-};
-
-const music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
 
 /**
  * @api {get} /events/artist=:artist?/location=:location? 
- * Return futur events in function of artist and location
  * 
  * @apiName GetEvents
  * @apiGroup events
  * @apiVersion  0.1.0
  * 
- * @apiUse DefGetEvents
+ * @apiDescription Return futur events in function of artist and location
+ * 
+ * @apiParam  {String} artist Optional artist name
+ * @apiParam  {String} location Optional location name
+ *
+ * @apiError no_param_provided No location nor artist was given to the API
+ * @apiError artist_or_location_not_found The given artist or location wasn't found
+ *
+ * @apiSuccess {Object[]} events Array of events (it can be empty)
+ * @apiSuccess {String}   events.id Event's id
+ * @apiSuccess {String}   events.title Event's title
+ * @apiSuccess {String}   events.venue Event's venue
+ * @apiSuccess {String}   events.date Event's date, format : "YYYY-MM-DD hh:mm:ss"
+ * @apiSuccess {String}   events.address Event's postal address
+ * @apiSuccess {String}   events.city Event's city
+ * @apiSuccess {String}   events.region Event's region
+ * @apiSuccess {String}   events.postal_code Event's postal code
+ * @apiSuccess {String}   events.country Event's country
+ * @apiSuccess {String}   events.latitude Event's latitude
+ * @apiSuccess {String}   events.longitude Event's longitude
+ * @apiSuccess {String}   events.offer Event's offer URL to buy ticket for example
+ *
+ * @apiSuccess {Object[]} events.performers Event's performers
+ * @apiSuccess {String}   events.performers.name Performer's name
+ * @apiSuccess {String}   events.performers.short_bio Performer's kind of music (short)
+ * @apiSuccess {String}   events.performers.thumb Little image URL of the artist
+ * @apiSuccess {String}   events.performers.image Image URL of the artist
+ * @apiSuccess {String}   events.performers.facebook Facebook URL of the artist
+ *
+ * @apiParamExample  {json} Request-Example:
+ * {
+ *   "artist": "Metallica",
+ *   "location": "Geneva"
+ * }
+ *
+ * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
+ * {
+ *   "events": [
+ *     {
+ *       "id": "42",
+ *       "title": "Metallica",
+ *       "venue": "Geneva Palexpo",
+ *       "date": "2018-04-11 00:00:00",
+ *       "address": "Case Postale 112 Grand-Saconnex",
+ *       "city": "Geneva",
+ *       "region": "Genève",
+ *       "postal_code": "CH-1218",
+ *       "country": "Switzerland",
+ *       "latitude": "46.2",
+ *       "longitude": "6.16667",
+ *       "offer": "https://www.bandsintown.com/t/17938982?app_id=hehe&came_from=267",
+ *       "performers": [
+ *         {
+ *           "name": "Metallica",
+ *           "short_bio": "Metal / Rock",
+ *           "thumb": "https://s3.amazonaws.com/bit-photos/thumb/6874519.jpeg",
+ *           "image": "https://s3.amazonaws.com/bit-photos/large/6874519.jpeg",
+ *           "facebook": ""
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
  */
-app.get('/events/artist=:artist?/location=:location?', function(req, res) {
-   log.debug("request url", req.url);
-   log.debug("request params", req.params);
-   let artist = req.params.artist;
-   let location = req.params.location;
-   res.type('json');
+app.get('/events/artist=:artist?/location=:location?', events.events);
 
-   if (artist == undefined && location == undefined) {
-      log.error("no_param_provided");
-      res.status(404).end(JSON.stringify({no_param_provided: true}));
-   }
-   else {
-      let events = [];
-      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
-      location = location != undefined ? diacritics.replaceDiacritics(location).toLowerCase() : undefined;
-
-      // First get request to obtain pages number
-      // of eventful data
-      axios.get(events_search_eventful, {
-         params: {
-            app_key: key_eventful,
-            keywords: artist,
-            location: location,
-            category: "music,festivals_parades",
-            date: "future",
-            sort_order: "popularity",
-            page_size: page_size,
-            count_only: true
-         }
-      })
-      .then(count => {
-         let items = parseInt(count.data.total_items);
-         let page_number = -1;
-
-         if (items >= 0) {
-            // If there is items, an array of params of get URL
-            // is created, for every page of eventful, a request
-            // will be send
-            page_number = Math.ceil(items / page_size);
-            let params_array = [];
-            for (let i = 1; i <= page_number; i++) {
-               params_array.push({
-                  params: {
-                     app_key: key_eventful,
-                     keywords: artist,
-                     location: location,
-                     category: "music,festivals_parades",
-                     date: "future",
-                     sort_order: "popularity",
-                     page_size: page_size,
-                     page_number: i
-                  }
-               });
-            }
-
-            // With axios, we can perform multiple requests and 
-            // process them all when they are all finished
-            let promise_array = params_array.map(p => axios.get(events_search_eventful, p));
-            axios.all(promise_array)
-            .then(results => {
-               // Eventfull processing
-               results.map(r => r.data.events.event).forEach(events_set => {
-                  events_set.forEach(event => {
-                     if (event.performers != null) {
-                        let performers = [];
-                        let contains = false;
-
-                        // performers property of eventful is a little dumb
-                        // I think, if multiple performers it's an array, 
-                        // else only one object
-                        if (Array.isArray(event.performers.performer)) {
-                           event.performers.performer.forEach(p => {
-                              // eventful keywords is not really top for this 
-                              // case, it match too many results with an artist name,
-                              // it checks his description of events. We are only 
-                              // interested by the name of performers. So we check
-                              // if the name is include in performers name.
-                              if ((artist != undefined && p.name.toLowerCase().includes(artist)) || artist == undefined) {
-                                 performers.push({
-                                    name: p.name,
-                                    short_bio: p.short_bio
-                                 });
-                                 contains = true;
-                              }
-                           });
-                        }
-                        else {
-                           let perf = event.performers.performer;
-                           if ((artist != undefined && perf.name.toLowerCase().includes(artist)) || artist == undefined) {
-                              performers.push({
-                                 name: perf.name,
-                                 short_bio: perf.short_bio
-                              });
-                              contains = true;
-                           }
-                        }
-
-                        // Construction of object response
-                        if (contains) {
-                           events.push({
-                              id: event.id,
-                              title: event.title,
-                              venue: event.venue_name,
-                              date: event.start_time,
-                              address: event.venue_address,
-                              city: event.city_name,
-                              region: event.region_name,
-                              postal_code: event.postal_code,
-                              country: event.country_name,
-                              latitude: event.latitude,
-                              longitude: event.longitude,
-                              offer: event.url,
-                              performers: performers
-                           });
-                        }
-                     }
-                  });
-               });
-               
-               // BandsInTown comes into play
-               if (artist != undefined) {
-                  axios.get(url_bands_in_town(artist, "asdf"))
-                  .then(resp => {
-                     events.forEach(event => {
-                        event.performers.forEach(perf => {
-                           perf.thumb = resp.data.thumb_url;
-                           perf.image = resp.data.image_url;
-                           perf.facebook = resp.data.facebook_page_url;
-                        });
-                     });
-
-                     res.status(200).end(JSON.stringify({events: events}));
-                  })
-                  .catch(error => {
-                     res.status(404).end({artist_or_location_not_found: error});
-                     log.error(error);
-                  });
-               }
-               else {
-                  res.status(200).end(JSON.stringify({events: events}));
-               }
-               log.debug("events\n", events);
-               log.debug("events length", events.length);
-            })
-            .catch(error => {
-               res.status(404).end({artist_or_location_not_found: error});
-               log.error(error);
-            });
-         }
-      })
-      .catch(error => {
-         res.status(404).end({artist_or_location_not_found: error});
-         log.error(error);
-      });
-   }
-});
-
-/**
+ /**
  * @api {get} /infos/artist=:artist 
  * Return infos of the artist
  * 
  * @apiName GetInfos
  * @apiGroup infos
  * @apiVersion  0.1.0
+ * 
+ * @apiParam  {String} artist Artist name
  *
- * @apiUse DefGetInfos
+ * @apiError artist_not_found The given artist wasn't found
+ * @apiError no_artist_provided No artist was given to the API
+ *
+ * @apiSuccess {Object}  artist Artist object
+ * @apiSuccess {String}  artist.name Artist's name
+ * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
+ * @apiSuccess {String}  artist.country Artist's country origin
+ * @apiSuccess {String}  artist.disambiguation Artist's disambiguation = kind of music
+ * @apiSuccess {Object}  artist.life_span Infos about life span of artist
+ * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
+ * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}  artist.image Image URL
+ * @apiSuccess {String}  artist.thumb Thumb URL
+ * @apiSuccess {String}  artist.facebook Facebook URL
+ *
+ * @apiParamExample  {json} Request-Example:
+ * {
+ *   "artist": "Nirvana"
+ * }
+ *
+ * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
+ * {
+ *   infos : {
+ *     "name": "Nirvana",
+ *     "type": "Group",
+ *     "country": "US",
+ *     "disambiguation": "90s US grunge band",
+ *     "life_span": {
+ *        "ended": true,
+ *        "begin": "1988-02",
+ *        "end": "1994-04-05"
+ *      },
+ *      "image": "https://s3.amazonaws.com/bit-photos/large/267414.jpeg",
+ *      "thumb": "https://s3.amazonaws.com/bit-photos/thumb/267414.jpeg",
+ *      "facebook": "https://www.facebook.com/pages/Nervana/409308175799582"
+ *   }
+ * }
  */
-app.get('/infos/artist=:artist', function(req, res) {
-   log.debug("request url", req.url);
-   log.debug("request params", req.params);
-   let artist = req.params.artist;
-   res.type('json');
-
-   if (artist != undefined) {
-      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
-
-      axios.all([
-         axios.get("https://en.wikipedia.org/w/api.php", {
-            params: {
-               format: "json",
-               action: "query",
-               prop: "extracts",
-               exintro: "",
-               explaintext: "",
-               indexpageids: "",
-               titles: artist
-            }
-         }),
-         axios.get(music_brainz_url + artist),
-         axios.get(url_bands_in_town(artist, "asdf"))
-      ])
-      .then(axios.spread((wk, mb, bit) => {
-         let infos = undefined;
-
-         if (wk.data) {
-            const id = wk.data.query.pageids[0];
-            const wiki = wk.data.query.pages[id];
-
-            let description = "";
-            // this test to discrimine if there is another page with same name
-            if (wiki.extract.length >= artist.length * 2) {
-               description = wiki.extract;
-            }
-
-            infos = {
-               name: wiki.title,
-               description: description,
-               type: "",
-               country: "",
-               disambiguation: "",
-               life_span: {
-                  ended: "",
-                  begin: "",
-                  end: ""
-               }
-            };
-         }
-         else {
-            const mb_artist = mb.data.artists[0];
-            const mb_life_span = mb_artist["life-span"];
-            infos = {
-               name: mb_artist.name,
-               description: "",
-               type: mb_artist.type ? mb_artist.type : "",
-               country: mb_artist.country ? mb_artist.country : "",
-               disambiguation: mb_artist.disambiguation ? mb_artist.disambiguation : "",
-               life_span: {
-                  ended: mb_life_span.ended ? mb_life_span.ended : "",
-                  begin: mb_life_span.begin ? mb_life_span.begin : "",
-                  end: mb_life_span.end ? mb_life_span.end : ""
-               }
-            };
-         }
-         infos.image = bit.data.image_url;
-         infos.thumb = bit.data.thumb_url;
-         infos.facebook = bit.data.facebook_page_url;
-         
-         log.debug("infos\n", infos);
-         res.status(200).end(JSON.stringify({infos: infos}));
-      }))
-      .catch(error => {
-         log.error(error);
-         res.status(404).end(JSON.stringify({
-            artist_not_found: error,
-            artist_request: artist
-         }));
-      });
-   }
-   else {
-      log.error("no_artist_provided");
-      res.status(404).end(JSON.stringify({no_artist_provided: true}));
-   }
-});
+app.get('/infos/artist=:artist', infos.infos);
 
 /**
  * @api {get} /tracks/artist=:artist/country_code=:country_code
- * Return the top-tracks infos for this artist and country code.
- * Also contains the track preview's URL if existent.
  * 
  * @apiName GetTracks
  * @apiGroup tracks
  * @apiVersion  0.1.0
  *
- * @apiUse DefGetTracks
+ * @apiDescription Return the top-tracks infos for this artist and country code.
+ * Also contains the track preview's URL if existent.
+ * 
+ * @apiParam  {String} artist The artist name
+ * @apiParam  {String} country_code The country's code (ISO 3166-1 alpha-2)
+ *
+ * @apiError artist_not_found The given artist wasn't found
+ * @apiError no_artist_and_code_provided No artist and code was given to the API 
+ * @apiError preview_not_found No top tracks has preview
+ *
+ * @apiSuccess {Object[]} tracks Array of tracks
+ * @apiSuccess {String}   tracks.id Tracks's id
+ * @apiSuccess {String}   tracks.name Tracks's title
+ * @apiSuccess {String}   tracks.album Name of the album the track's in
+ * @apiSuccess {String}   tracks.preview_url URL of the track preview
+ * @apiSuccess {Number}   tracks.popularity Spotify's popularity rank
+ *
+ *
+ * @apiParamExample  {json} Request-Example:
+ * {
+ *   "artist": "Metallica",
+ *   "country_code": "US"
+ * }
+ *
+ * @apiSuccessExample {json} Success-Response:
+ * HTTP/1.1 200 OK
+ * {
+ *   "tracks": [
+ *     {
+ *       "id": "10igKaIKsSB6ZnWxPxPvKO",
+ *       "name": "Nothing Else Matters",
+ *       "album": "Metallica",
+ *       "preview_url": "https://p.scdn.co/mp3-preview/a2a9c13416fc981d035e75f16ec63b0d8e6486ba?cid=bfa3df6d31284912b0ed76fa6c5673b5",
+ *       "popularity": 68
+ *     }
+ *   ]
+ * }
  */
-app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) {
-   log.debug("request url", req.url);
-   log.debug("request params", req.params);
-   let artist = req.params.artist;
-   let country_code = req.params.country_code;
-   res.type('json');
-
-   if (artist != undefined && country_code != undefined) {
-      artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
-      country_code = country_code != undefined ? diacritics.replaceDiacritics(country_code).toLowerCase() : undefined;
-
-      spotifyApi.clientCredentialsGrant()
-      .then(data => {
-         spotifyApi.setAccessToken(data.body['access_token']);
-         return spotifyApi.searchArtists(artist);
-      })
-      .then(data => {
-         log.debug(spotifyApi.getAccessToken());
-         const spotify_artist = data.body.artists.items[0];
-         return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
-      })
-      .then(data => {
-         let preview = false;
-
-         let tracks = [];
-         data.body.tracks.forEach(track => {
-            preview = track.preview_url != null ? true : false;
-            tracks.push({
-               id: track.id,
-               name: track.name,
-               album: track.album.name,
-               preview_url: track.preview_url,
-               popularity: track.popularity
-            });
-         });
-
-         if (preview) {
-            log.debug("tracks\n", tracks);
-            log.debug("tracks length", tracks.length);
-            res.status(200).end(JSON.stringify({tracks: tracks}));
-         }
-         else {
-            log.error("preview_not_found");
-            res.status(404).end(JSON.stringify({preview_not_found: true}));
-         }
-      })
-      .catch(error => {
-         log.error(error);
-         res.status(404).end(JSON.stringify({artist_not_found: error}));
-      });
-   }
-   else {
-      log.error("no_artist_and_code_provided");
-      res.status(404).end(JSON.stringify({no_artist_and_code_provided: true}));
-   }
-});
+app.get('/tracks/artist=:artist/country_code=:country_code', tracks.tracks);
 
 app.listen(8080);

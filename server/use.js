@@ -1,16 +1,23 @@
+const consts = require('./consts');
+
+exports.url_bands_in_town = function(artist, app_id) {
+    return bands_in_town_url + artist + "?app_id=" + app_id;
+};
+
 // from https://github.com/yvg/js-replace-diacritics
 
 /* This program is free software. It comes without any warranty, to
- * the extent permitted by applicable law. You can redistribute it
- * and/or modify it under the terms of the Do What The Fuck You Want
- * To Public License, Version 2, as published by Sam Hocevar. See
- * http://sam.zoy.org/wtfpl/COPYING for more details. */
+* the extent permitted by applicable law. You can redistribute it
+* and/or modify it under the terms of the Do What The Fuck You Want
+* To Public License, Version 2, as published by Sam Hocevar. See
+* http://sam.zoy.org/wtfpl/COPYING for more details. */
 
 /* Original work by "lehelk" http://lehelk.com/2011/05/06/script-to-remove-diacritics/
-   depending of the usecase you may want to add the uppercase letters from this website to the alphabet and change the regex flags */
+depending of the usecase you may want to add the uppercase letters from this website to the alphabet and change the regex flags */
 
-(function(){
-  var alphabet = { a:/[\u0061\u24D0\uFF41\u1E9A\u00E0\u00E1\u00E2\u1EA7\u1EA5\u1EAB\u1EA9\u00E3\u0101\u0103\u1EB1\u1EAF\u1EB5\u1EB3\u0227\u01E1\u00E4\u01DF\u1EA3\u00E5\u01FB\u01CE\u0201\u0203\u1EA1\u1EAD\u1EB7\u1E01\u0105\u2C65\u0250]/ig,
+(function() {
+    var alphabet = {
+    a:/[\u0061\u24D0\uFF41\u1E9A\u00E0\u00E1\u00E2\u1EA7\u1EA5\u1EAB\u1EA9\u00E3\u0101\u0103\u1EB1\u1EAF\u1EB5\u1EB3\u0227\u01E1\u00E4\u01DF\u1EA3\u00E5\u01FB\u01CE\u0201\u0203\u1EA1\u1EAD\u1EB7\u1E01\u0105\u2C65\u0250]/ig,
     aa:/[\uA733]/ig,
     ae:/[\u00E6\u01FD\u01E3]/ig,
     ao:/[\uA735]/ig,
@@ -54,11 +61,11 @@
     y:/[\u0079\u24E8\uFF59\u1EF3\u00FD\u0177\u1EF9\u0233\u1E8F\u00FF\u1EF7\u1E99\u1EF5\u01B4\u024F\u1EFF]/ig,
     z:/[\u007A\u24E9\uFF5A\u017A\u1E91\u017C\u017E\u1E93\u1E95\u01B6\u0225\u0240\u2C6C\uA763]/ig,
     '':/[\u0300\u0301\u0302\u0303\u0308]/ig
-  };
-  exports.replaceDiacritics = function(str) {
+};
+exports.dia = function(str) {
     for (var letter in alphabet) {
-      str = str.replace(alphabet[letter], letter);
+        str = str.replace(alphabet[letter], letter);
     }
     return str;
-  };
+};
 }());

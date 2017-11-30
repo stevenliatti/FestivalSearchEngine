@@ -1,13 +1,17 @@
 {
     "name": "festivalsearchengine",
     "version": "0.1.0",
+    "main": "server.js",
+    "description": "Festival Search Engine",
+    "apidoc": {
+        "title": "Festival Search Engine API"
+    },
     "dependencies": {
         "axios": "^0.17.1",
         "cors": "^2.8.4",
         "express": "^4.16.2",
         "log": "^1.4.0",
         "mongodb": "^2.2.33",
-        "nodemon": "^1.12.1",
         "spotify-web-api-node": "^2.5.0"
     }
 }
