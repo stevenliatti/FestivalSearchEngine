@@ -11,13 +11,13 @@ const log = new Log("debug");
 const cors = require('cors');
 app.use(cors());
 
-const MongoClient = require('mongodb').MongoClient;
-const mongo_url = 'mongodb://localhost:27017/fse';
+// const MongoClient = require('mongodb').MongoClient;
+// const mongo_url = 'mongodb://localhost:27017/fse';
 
-MongoClient.connect(mongo_url, function(err, db) {
-   console.log("Connected successfully to mongodb server");
-   db.close();
-});
+// MongoClient.connect(mongo_url, function(err, db) {
+//    console.log("Connected successfully to mongodb server");
+//    db.close();
+// });
 
 const SpotifyWebApi = require('spotify-web-api-node');
 const clientId = 'bfa3df6d31284912b0ed76fa6c5673b5';
@@ -226,26 +226,66 @@ app.get('/infos/artist=:artist', function(req, res) {
       artist = artist != undefined ? diacritics.replaceDiacritics(artist).toLowerCase() : undefined;
 
       axios.all([
+         axios.get("https://en.wikipedia.org/w/api.php", {
+            params: {
+               format: "json",
+               action: "query",
+               prop: "extracts",
+               exintro: "",
+               explaintext: "",
+               indexpageids: "",
+               titles: artist
+            }
+         }),
          axios.get(music_brainz_url + artist),
          axios.get(url_bands_in_town(artist, "asdf"))
       ])
-      .then(axios.spread((mb, bit) => {
-         const mb_artist = mb.data.artists[0];
-         const life_span = mb_artist["life-span"];
-         let infos = {
-            name: mb_artist.name,
-            type: mb_artist.type,
-            country: mb_artist.country ? mb_artist.country : null,
-            disambiguation: mb_artist.disambiguation ? mb_artist.disambiguation : null,
-            life_span: {
-               ended: life_span.ended ? life_span.ended : null,
-               begin: life_span.begin ? life_span.begin : null,
-               end: life_span.end ? life_span.end : null
-            },
-            image: bit.data.image_url,
-            thumb: bit.data.thumb_url,
-            facebook: bit.data.facebook_page_url
-         };
+      .then(axios.spread((wk, mb, bit) => {
+         let infos = undefined;
+
+         if (wk.data) {
+            const id = wk.data.query.pageids[0];
+            const wiki = wk.data.query.pages[id];
+
+            let description = "";
+            // this test to discrimine if there is another page with same name
+            if (wiki.extract.length >= artist.length * 2) {
+               description = wiki.extract;
+            }
+
+            infos = {
+               name: wiki.title,
+               description: description,
+               type: "",
+               country: "",
+               disambiguation: "",
+               life_span: {
+                  ended: "",
+                  begin: "",
+                  end: ""
+               }
+            };
+         }
+         else {
+            const mb_artist = mb.data.artists[0];
+            const mb_life_span = mb_artist["life-span"];
+            infos = {
+               name: mb_artist.name,
+               description: "",
+               type: mb_artist.type ? mb_artist.type : "",
+               country: mb_artist.country ? mb_artist.country : "",
+               disambiguation: mb_artist.disambiguation ? mb_artist.disambiguation : "",
+               life_span: {
+                  ended: mb_life_span.ended ? mb_life_span.ended : "",
+                  begin: mb_life_span.begin ? mb_life_span.begin : "",
+                  end: mb_life_span.end ? mb_life_span.end : ""
+               }
+            };
+         }
+         infos.image = bit.data.image_url;
+         infos.thumb = bit.data.thumb_url;
+         infos.facebook = bit.data.facebook_page_url;
+         
          log.debug("infos\n", infos);
          res.status(200).end(JSON.stringify({infos: infos}));
       }))
@@ -293,7 +333,6 @@ app.get('/tracks/artist=:artist/country_code=:country_code', function(req, res) 
       .then(data => {
          log.debug(spotifyApi.getAccessToken());
          const spotify_artist = data.body.artists.items[0];
-         // log.debug(spotify_artist);
          return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
       })
       .then(data => {
