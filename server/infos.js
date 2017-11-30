@@ -66,9 +66,9 @@ exports.infos = function(req, res) {
                     infos.type = use.is_defined(mb_artist.type);
                     infos.country = use.is_defined(mb_artist.country);
                     infos.disambiguation = use.is_defined(mb_artist.disambiguation);
-                    life_span.ended = use.is_defined(mb_life_span.ended);
-                    life_span.begin = use.is_defined(mb_life_span.begin);
-                    life_span.end = use.is_defined(mb_life_span.end);
+                    infos.life_span.ended = use.is_defined(mb_life_span.ended);
+                    infos.life_span.begin = use.is_defined(mb_life_span.begin);
+                    infos.life_span.end = use.is_defined(mb_life_span.end);
                 }
             }
             

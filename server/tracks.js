@@ -29,11 +29,11 @@ exports.tracks = function(req, res) {
             data.body.tracks.forEach(track => {
                 preview = track.preview_url != null ? true : false;
                 tracks.push({
-                    id: track.id,
-                    name: track.name,
-                    album: track.album.name,
-                    preview_url: track.preview_url,
-                    popularity: track.popularity
+                    id: use.is_defined(track.id),
+                    name: use.is_defined(track.name),
+                    album: use.is_defined(track.album).name,
+                    preview_url: use.is_defined(track.preview_url),
+                    popularity: use.is_defined(track.popularity)
                 });
             });
 
