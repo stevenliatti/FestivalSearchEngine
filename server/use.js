@@ -4,6 +4,10 @@ exports.url_bands_in_town = function(artist, app_id) {
     return bands_in_town_url + artist + "?app_id=" + app_id;
 };
 
+exports.is_defined = function(str) {
+    return str != null || str != undefined ? str : "";
+};
+
 // from https://github.com/yvg/js-replace-diacritics
 
 /* This program is free software. It comes without any warranty, to

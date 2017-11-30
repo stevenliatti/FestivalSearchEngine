@@ -20,6 +20,7 @@ app.use(cors());
  *
  * @apiError no_param_provided No location nor artist was given to the API
  * @apiError artist_or_location_not_found The given artist or location wasn't found
+ * @apiError no_events No events were found
  *
  * @apiSuccess {Object[]} events Array of events (it can be empty)
  * @apiSuccess {String}   events.id Event's id
