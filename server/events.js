@@ -9,8 +9,8 @@ exports.events = function(req, res) {
     res.type('json');
 
     if (artist == undefined && location == undefined) {
-        log.error("no_param_provided");
-        res.status(404).end(JSON.stringify({no_param_provided: true}));
+        log.error("no_params_provided");
+        res.status(404).end(JSON.stringify({no_params_provided: true}));
     }
     else {
         artist = artist != undefined ? use.dia(artist).toLowerCase() : undefined;
@@ -37,7 +37,7 @@ exports.events = function(req, res) {
                     resolve(items);
                 }
                 else {
-                    reject("no events");
+                    reject(true);
                 }
             });
         })
@@ -131,7 +131,7 @@ exports.events = function(req, res) {
                     resolve(events);
                 }
                 else {
-                    reject("no events");
+                    reject(true);
                 }
             });
         })
@@ -151,7 +151,7 @@ exports.events = function(req, res) {
                     res.status(200).end(JSON.stringify({events: events}));
                 })
                 .catch(error => {
-                    log.error(error);
+                    log.warning(error);
                     res.status(200).end(JSON.stringify({events: events}));
                 });
             }
@@ -162,8 +162,8 @@ exports.events = function(req, res) {
             log.debug("events length", events.length);
         })
         .catch(error => {
-            res.status(404).end(JSON.stringify({events_error: error}));
-            log.error(error);
+            log.error("no_events");
+            res.status(404).end(JSON.stringify({no_events: true}));
         });
     }
 };

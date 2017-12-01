@@ -13,14 +13,12 @@ app.use(cors());
  * @apiGroup events
  * @apiVersion  0.1.0
  * 
- * @apiDescription Return futur events in function of artist and location
+ * @apiDescription Return futur events in function of artist and location from Eventful and BandsInTown.
+ * Artist and location params cannot be empty at same time (no_params_provided error).
+ * To note that all string fields can be string empty ("").
  * 
  * @apiParam  {String} artist Optional artist name
  * @apiParam  {String} location Optional location name
- *
- * @apiError no_param_provided No location nor artist was given to the API
- * @apiError artist_or_location_not_found The given artist or location wasn't found
- * @apiError no_events No events were found
  *
  * @apiSuccess {Object[]} events Array of events (it can be empty)
  * @apiSuccess {String}   events.id Event's id
@@ -43,10 +41,13 @@ app.use(cors());
  * @apiSuccess {String}   events.performers.image Image URL of the artist
  * @apiSuccess {String}   events.performers.facebook Facebook URL of the artist
  *
+ * @apiError no_params_provided {Boolean} No location nor artist was given to the API
+ * @apiError no_events {Boolean} No events found
+ * 
  * @apiParamExample  {json} Request-Example:
  * {
  *   "artist": "Metallica",
- *   "location": "Geneva"
+ *   "location": "Genève"
  * }
  *
  * @apiSuccessExample {json} Success-Response:
@@ -54,7 +55,7 @@ app.use(cors());
  * {
  *   "events": [
  *     {
- *       "id": "42",
+ *       "id": "E0-001-101271887-2",
  *       "title": "Metallica",
  *       "venue": "Geneva Palexpo",
  *       "date": "2018-04-11 00:00:00",
@@ -65,7 +66,7 @@ app.use(cors());
  *       "country": "Switzerland",
  *       "latitude": "46.2",
  *       "longitude": "6.16667",
- *       "offer": "https://www.bandsintown.com/t/17938982?app_id=hehe&came_from=267",
+ *       "offer": "http://eventful.com/events/metallica-/E0-001-101271887-2?utm_source=apis&utm_medium=apim&utm_campaign=apic",
  *       "performers": [
  *         {
  *           "name": "Metallica",
@@ -78,24 +79,36 @@ app.use(cors());
  *     }
  *   ]
  * }
+ * 
+ * @apiErrorExample {json} No params provided
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "no_params_provided": true
+ * }
+ * 
+ * @apiErrorExample {json} No events
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "no_events": true
+ * }
  */
 app.get('/events/artist=:artist?/location=:location?', events.events);
 
  /**
  * @api {get} /infos/artist=:artist 
- * Return infos of the artist
  * 
  * @apiName GetInfos
  * @apiGroup infos
  * @apiVersion  0.1.0
  * 
+ * @apiDescription Return infos about artist from Wikipedia, MusicBrainz and BandsInTown.
+ * To note that all string fields can be string empty ("").
+ * 
  * @apiParam  {String} artist Artist name
- *
- * @apiError artist_not_found The given artist wasn't found
- * @apiError no_artist_provided No artist was given to the API
  *
  * @apiSuccess {Object}  artist Artist object
  * @apiSuccess {String}  artist.name Artist's name
+ * @apiSuccess {String}  artist.description Artist's description (from wikipedia)
  * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
  * @apiSuccess {String}  artist.country Artist's country origin
  * @apiSuccess {String}  artist.disambiguation Artist's disambiguation = kind of music
@@ -106,6 +119,9 @@ app.get('/events/artist=:artist?/location=:location?', events.events);
  * @apiSuccess {String}  artist.image Image URL
  * @apiSuccess {String}  artist.thumb Thumb URL
  * @apiSuccess {String}  artist.facebook Facebook URL
+ * 
+ * @apiError artist_not_found {Boolean} The given artist wasn't found
+ * @apiError no_artist_provided {Boolean} No artist was given to the API
  *
  * @apiParamExample  {json} Request-Example:
  * {
@@ -117,6 +133,7 @@ app.get('/events/artist=:artist?/location=:location?', events.events);
  * {
  *   infos : {
  *     "name": "Nirvana",
+ *     "description": "",
  *     "type": "Group",
  *     "country": "US",
  *     "disambiguation": "90s US grunge band",
@@ -130,6 +147,18 @@ app.get('/events/artist=:artist?/location=:location?', events.events);
  *      "facebook": "https://www.facebook.com/pages/Nervana/409308175799582"
  *   }
  * }
+ * 
+ * @apiErrorExample {json} Artist not found
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "artist_not_found": true
+ * }
+ * 
+ * @apiErrorExample {json} No artist provided
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "no_artist_provided": true
+ * }
  */
 app.get('/infos/artist=:artist', infos.infos);
 
@@ -140,15 +169,12 @@ app.get('/infos/artist=:artist', infos.infos);
  * @apiGroup tracks
  * @apiVersion  0.1.0
  *
- * @apiDescription Return the top-tracks infos for this artist and country code.
+ * @apiDescription Return the top-tracks infos for this artist and country code from Spotify.
  * Also contains the track preview's URL if existent.
+ * To note that all string fields can be string empty ("").
  * 
  * @apiParam  {String} artist The artist name
  * @apiParam  {String} country_code The country's code (ISO 3166-1 alpha-2)
- *
- * @apiError artist_not_found The given artist wasn't found
- * @apiError no_artist_and_code_provided No artist and code was given to the API 
- * @apiError preview_not_found No top tracks has preview
  *
  * @apiSuccess {Object[]} tracks Array of tracks
  * @apiSuccess {String}   tracks.id Tracks's id
@@ -157,7 +183,10 @@ app.get('/infos/artist=:artist', infos.infos);
  * @apiSuccess {String}   tracks.preview_url URL of the track preview
  * @apiSuccess {Number}   tracks.popularity Spotify's popularity rank
  *
- *
+ * @apiError artist_not_found {Boolean} The given artist wasn't found
+ * @apiError no_artist_and_code_provided {Boolean} No artist and code was given to the API 
+ * @apiError preview_not_found {Boolean} No top tracks has preview
+ * 
  * @apiParamExample  {json} Request-Example:
  * {
  *   "artist": "Metallica",
@@ -176,6 +205,24 @@ app.get('/infos/artist=:artist', infos.infos);
  *       "popularity": 68
  *     }
  *   ]
+ * }
+ * 
+ * @apiErrorExample {json} Artist not found
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "artist_not_found": true
+ * }
+ * 
+ * @apiErrorExample {json} No artist and code provided
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "no_artist_and_code_provided": true
+ * }
+ * 
+ * @apiErrorExample {json} No top tracks has preview
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "preview_not_found": true
  * }
  */
 app.get('/tracks/artist=:artist/country_code=:country_code', tracks.tracks);

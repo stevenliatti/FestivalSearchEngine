@@ -49,7 +49,8 @@ exports.tracks = function(req, res) {
         })
         .catch(error => {
             log.error(error);
-            res.status(404).end(JSON.stringify({artist_not_found: error}));
+            log.error("artist_not_found");
+            res.status(404).end(JSON.stringify({artist_not_found: true}));
         });
     }
     else {

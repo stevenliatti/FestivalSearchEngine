@@ -22,6 +22,8 @@ events_search_eventful = "http://api.eventful.com/json/events/search",
 page_size = 250,
 
 bands_in_town_url = "https://rest.bandsintown.com/artists/",
-music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=";
+music_brainz_url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=",
+
+wiki_url = "https://en.wikipedia.org/w/api.php";
 
 module.exports = {};
