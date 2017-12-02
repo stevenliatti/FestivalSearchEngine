@@ -1,13 +1,16 @@
 # Festival Search Engine
 
 ## Installation and run
-To test, you need Node.js with npm installed. In terminal, move to `server` and run :
+You can access it via [this URL](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080). 
+Examples of routes and doc are [here](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080/routes).
+
+To run locally, you need Node.js with npm installed. In terminal, move to `src` and run :
   ```
   npm install
   npm start
   ```
 
-Next, move to `web` and open `index.html` in browser.
+Next, open `http://localhost:8080/` in your browser.
 
 ## Features
 ![Mock up](mockup/homepage.png)
