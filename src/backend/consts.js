@@ -3,8 +3,9 @@ app = express(),
 
 axios = require('axios'),
 
+fs = require('fs'),
 Log = require("log"),
-log = new Log("debug"),
+log = new Log("debug", fs.createWriteStream("fse.log")),
 
 cors = require('cors'),
 
