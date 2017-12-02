@@ -106,19 +106,25 @@ app.get('/events/artist=:artist?/location=:location?', events.events);
  * 
  * @apiParam  {String} artist Artist name
  *
- * @apiSuccess {Object}  artist Artist object
- * @apiSuccess {String}  artist.name Artist's name
- * @apiSuccess {String}  artist.description Artist's description (from wikipedia)
- * @apiSuccess {String}  artist.type Information to know if it's a band or single artist
- * @apiSuccess {String}  artist.country Artist's country origin
- * @apiSuccess {String}  artist.disambiguation Artist's disambiguation = kind of music
- * @apiSuccess {Object}  artist.life_span Infos about life span of artist
- * @apiSuccess {Boolean} artist.life_span.ended If the artist/group don't exist anymore
- * @apiSuccess {String}  artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- * @apiSuccess {String}  artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
- * @apiSuccess {String}  artist.image Image URL
- * @apiSuccess {String}  artist.thumb Thumb URL
- * @apiSuccess {String}  artist.facebook Facebook URL
+ * @apiSuccess {Object}    artist Artist object
+ * @apiSuccess {String}    artist.name Artist's name
+ * @apiSuccess {String}    artist.description Artist's description (from wikipedia)
+ * @apiSuccess {String}    artist.type Information to know if it's a band or single artist
+ * @apiSuccess {String}    artist.country Artist's country origin
+ * @apiSuccess {String}    artist.disambiguation Artist's disambiguation = kind of music
+ * @apiSuccess {Object}    artist.life_span Infos about life span of artist
+ * @apiSuccess {Boolean}   artist.life_span.ended If the artist/group don't exist anymore
+ * @apiSuccess {String}    artist.life_span.begin Begin date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}    artist.life_span.end End date of artist/group, format : "YYYY-MM-DD" or "YYYY-MM" or "YYYY"
+ * @apiSuccess {String}    artist.image Image URL
+ * @apiSuccess {String}    artist.thumb Thumb URL
+ * @apiSuccess {String}    artist.facebook Facebook URL
+ * @apiSuccess {String[]}  artist.genres Array of string containing genres from Spotify
+ * @apiSuccess {String}    artist.id Spotify's id
+ * @apiSuccess {Object[]}  artist.images Additionnal images from Spotify
+ * @apiSuccess {Integer}   artist.images.height Height of image
+ * @apiSuccess {Integer}   artist.images.width Width of image
+ * @apiSuccess {String}    artist.images.url URL of image
  * 
  * @apiError artist_not_found {Boolean} The given artist wasn't found
  * @apiError no_artist_provided {Boolean} No artist was given to the API
@@ -160,7 +166,7 @@ app.get('/events/artist=:artist?/location=:location?', events.events);
  *   "no_artist_provided": true
  * }
  */
-app.get('/infos/artist=:artist', infos.infos);
+app.get('/infos/artist=:artist?', infos.infos);
 
 /**
  * @api {get} /tracks/artist=:artist/country_code=:country_code
@@ -225,6 +231,6 @@ app.get('/infos/artist=:artist', infos.infos);
  *   "preview_not_found": true
  * }
  */
-app.get('/tracks/artist=:artist/country_code=:country_code', tracks.tracks);
+app.get('/tracks/artist=:artist?/country_code=:country_code?', tracks.tracks);
 
 app.listen(8080);

@@ -9,8 +9,8 @@ exports.tracks = function(req, res) {
     res.type('json');
 
     if (artist != undefined && country_code != undefined) {
-        artist = artist != undefined ? use.dia(artist).toLowerCase() : undefined;
-        country_code = country_code != undefined ? use.dia(country_code).toLowerCase() : undefined;
+        artist = use.dia(artist).toLowerCase();
+        country_code = use.dia(country_code).toLowerCase();
 
         spotifyApi.clientCredentialsGrant()
         .then(data => {

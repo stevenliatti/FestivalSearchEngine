@@ -23,43 +23,69 @@ exports.infos = function(req, res) {
             },
             image: "",
             thumb: "",
-            facebook: ""
+            facebook: "",
+            genres: [],
+            id: "",
+            images: []
         };
 
-        let check_words = function(str) {
-            if (str) {
-                str = str.toLowerCase();
-                let test =
-                    str.includes("band") ||
-                    str.includes("sing") ||
-                    str.includes("song");
-                return test;
+        spotifyApi.clientCredentialsGrant()
+        .then(data => {
+            spotifyApi.setAccessToken(data.body['access_token']);
+            return spotifyApi.searchArtists(artist);
+        })
+        .then(data => {
+            log.debug(spotifyApi.getAccessToken());
+
+            if (data.body.artists.total === 0) {
+                return new Promise((resolve, reject) => {
+                    reject(true);
+                });
             }
-            return false;
-        };
-
-        let check_wiki = function(wk) {
-            if (wk.data) {
-                if (wk.data.query.pages) {
-                    const id = wk.data.query.pageids[0];
-                    const wiki = wk.data.query.pages[id];
-                    if (check_words(wiki.extract)) {
-                        infos.description = wiki.extract;
-                        log.debug("infos\n", infos);
-                        res.status(200).end(JSON.stringify({infos: infos}));
+            else {
+                const spotify_artist = data.body.artists.items[0];
+                const spotify_artist_name_search = spotify_artist.name.toLowerCase();
+                log.debug(spotify_artist);
+    
+                infos.name = spotify_artist.name;
+                infos.genres = spotify_artist.genres;
+                infos.id = spotify_artist.id;
+                infos.images = spotify_artist.images;
+    
+                return axios.all([
+                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search)),
+                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search + "_(band)")),
+                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search + "_(singer)")),
+                    axios.get(music_brainz_url + spotify_artist_name_search),
+                    axios.get(use.url_bands_in_town(spotify_artist_name_search, "asdf"))
+                ]);
+            }
+        })
+        .then(axios.spread((wk, wk_band, wk_singer, mb, bit) => {
+            let check_words = function(str) {
+                if (str) {
+                    str = str.toLowerCase();
+                    let test =
+                        str.includes("band") ||
+                        str.includes("sing") ||
+                        str.includes("song");
+                    return test;
+                }
+                return false;
+            };
+    
+            let check_wiki = function(wk) {
+                if (wk.data) {
+                    if (wk.data.query.pages) {
+                        const id = wk.data.query.pageids[0];
+                        const wiki = wk.data.query.pages[id];
+                        if (check_words(wiki.extract)) {
+                            infos.description = wiki.extract;
+                        }
                     }
                 }
-            }
-        };
+            };
 
-        axios.all([
-            axios.get(wiki_url, use.wiki_params(artist)),
-            axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
-            axios.get(wiki_url, use.wiki_params(artist + "_(singer)")),
-            axios.get(music_brainz_url + artist),
-            axios.get(use.url_bands_in_town(artist, "asdf"))
-        ])
-        .then(axios.spread((wk, wk_band, wk_singer, mb, bit) => {
             infos.image = use.is_defined(bit.data.image_url);
             infos.thumb = use.is_defined(bit.data.thumb_url);
             infos.facebook = use.is_defined(bit.data.facebook_page_url);
@@ -69,7 +95,6 @@ exports.infos = function(req, res) {
                     const mb_artist = mb.data.artists[0];
                     const mb_life_span = mb_artist["life-span"];
                     
-                    infos.name = use.is_defined(mb_artist.name);
                     infos.type = use.is_defined(mb_artist.type);
                     infos.country = use.is_defined(mb_artist.country);
                     infos.disambiguation = use.is_defined(mb_artist.disambiguation);
@@ -82,6 +107,9 @@ exports.infos = function(req, res) {
             check_wiki(wk);
             check_wiki(wk_band);
             check_wiki(wk_singer);
+
+            log.debug("infos\n", infos);
+            res.status(200).end(JSON.stringify({infos: infos}));
         }))
         .catch(error => {
             log.error(error);
