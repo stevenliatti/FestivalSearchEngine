@@ -41,13 +41,13 @@
 			var locationQuery = getURLParameters("locationQuery");
 			var JSONQuery;
 			if(artistQuery === undefined && locationQuery === undefined)
-				JSONQuery = "http://localhost:8080/events/artist=/location=Switzerland";
+				JSONQuery = "/events/artist=/location=Switzerland";
 			else if(artistQuery === undefined)
-				JSONQuery = "http://localhost:8080/events/artist=/location=" + locationQuery + "";
+				JSONQuery = "/events/artist=/location=" + locationQuery + "";
 			else if(locationQuery === undefined)
-				JSONQuery = "http://localhost:8080/events/artist=" + artistQuery + "/location=";
+				JSONQuery = "/events/artist=" + artistQuery + "/location=";
 			else
-				JSONQuery = "http://localhost:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
+				JSONQuery = "/events/artist=" + artistQuery + "/location=" + locationQuery;
 			console.log(JSONQuery);
 			$.getJSON(JSONQuery)
 			.done(function(response) {
