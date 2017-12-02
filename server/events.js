@@ -16,18 +16,48 @@ exports.events = function(req, res) {
         artist = artist != undefined ? use.dia(artist).toLowerCase() : undefined;
         location = location != undefined ? use.dia(location).toLowerCase() : undefined;
 
-        // First get request to obtain pages number of eventful data
-        axios.get(events_search_eventful, {
-            params: {
-                app_key: key_eventful,
-                keywords: artist,
-                location: location,
-                category: "music,festivals_parades",
-                date: "future",
-                sort_order: "popularity",
-                page_size: page_size,
-                count_only: true
+        (function() {
+            if (artist != undefined) {
+                return spotifyApi.clientCredentialsGrant()
+                .then(data => {
+                    spotifyApi.setAccessToken(data.body['access_token']);
+                    return spotifyApi.searchArtists(artist);
+                })
+                .then(data => {
+                    log.debug(spotifyApi.getAccessToken());
+        
+                    if (data.body.artists.total === 0) {
+                        return new Promise((resolve, reject) => {
+                            reject(true);
+                        });
+                    }
+                    else {
+                        const spotify_artist = data.body.artists.items[0];
+                        artist = spotify_artist.name.toLowerCase();
+                        log.debug(spotify_artist);
+                    }
+                });
             }
+            else {
+                return new Promise((resolve, reject) => {
+                    resolve();
+                });
+            }
+        })()
+        .then(() => {
+            // First get request to obtain pages number of eventful data
+            return axios.get(events_search_eventful, {
+                params: {
+                    app_key: key_eventful,
+                    keywords: artist,
+                    location: location,
+                    category: "music,festivals_parades",
+                    date: "future",
+                    sort_order: "popularity",
+                    page_size: page_size,
+                    count_only: true
+                }
+            });
         })
         .then(count => {
             let items = parseInt(count.data.total_items);
