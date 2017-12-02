@@ -8,6 +8,12 @@ log = new Log("debug"),
 
 cors = require('cors'),
 
+MongoClient = require("mongodb").MongoClient,
+mongo_url = 'mongodb://localhost:27017/fse',
+
+monk = require('monk'),
+db = monk(mongo_url),
+
 SpotifyWebApi = require('spotify-web-api-node'),
 clientId = 'bfa3df6d31284912b0ed76fa6c5673b5',
 clientSecret = '523fc42e0bf94723b542930fbe5cf38e',

@@ -1,6 +1,10 @@
 const consts = require('./consts');
 const use = require('./use');
 
+const collection = db.get("events");
+const time = 24 * 3600;
+collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
+
 exports.events = function(req, res) {
     log.debug("request url", req.url);
     log.debug("request params", req.params);
@@ -24,8 +28,7 @@ exports.events = function(req, res) {
                     return spotifyApi.searchArtists(artist);
                 })
                 .then(data => {
-                    log.debug(spotifyApi.getAccessToken());
-        
+                    log.debug("token spotify", spotifyApi.getAccessToken());
                     if (data.body.artists.total === 0) {
                         return new Promise((resolve, reject) => {
                             reject(true);
@@ -34,7 +37,6 @@ exports.events = function(req, res) {
                     else {
                         const spotify_artist = data.body.artists.items[0];
                         artist = spotify_artist.name.toLowerCase();
-                        log.debug(spotify_artist);
                     }
                 });
             }
@@ -44,6 +46,23 @@ exports.events = function(req, res) {
                 });
             }
         })()
+        .then(() => {
+            return collection.findOne({artist: artist, location: location});
+        })
+        .then(doc => {
+            return new Promise((resolve, reject) => {
+                if (doc) {
+                    log.debug("from mongodb");
+                    log.debug("events\n", doc.events);
+                    log.debug("events length", doc.events.length);
+                    res.status(200).end(JSON.stringify({events: doc.events}));
+                    reject(false);
+                }
+                else {
+                    resolve();
+                }
+            });
+        })
         .then(() => {
             // First get request to obtain pages number of eventful data
             return axios.get(events_search_eventful, {
@@ -190,10 +209,20 @@ exports.events = function(req, res) {
             }
             log.debug("events\n", events);
             log.debug("events length", events.length);
+            
+            collection.insert({
+                artist: artist,
+                location: location,
+                events: events,
+                createdAt: new Date()
+            });
+            log.debug("insert in mongodb");
         })
         .catch(error => {
-            log.error("no_events");
-            res.status(404).end(JSON.stringify({no_events: true}));
+            if (error) {
+                log.error("no_events");
+                res.status(404).end(JSON.stringify({no_events: true}));
+            }
         });
     }
 };

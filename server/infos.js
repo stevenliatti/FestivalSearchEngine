@@ -1,10 +1,15 @@
 const consts = require("./consts");
 const use = require("./use");
 
+const collection = db.get("infos");
+const time = 7 * 24 * 3600;
+collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
+
 exports.infos = function(req, res) {
     log.debug("request url", req.url);
     log.debug("request params", req.params);
     let artist = req.params.artist;
+    let spotify_artist = undefined;
     res.type("json");
 
     if (artist != undefined) {
@@ -35,31 +40,47 @@ exports.infos = function(req, res) {
             return spotifyApi.searchArtists(artist);
         })
         .then(data => {
-            log.debug(spotifyApi.getAccessToken());
-
-            if (data.body.artists.total === 0) {
-                return new Promise((resolve, reject) => {
+            log.debug("token spotify", spotifyApi.getAccessToken());
+            return new Promise((resolve, reject) => {
+                if (data.body.artists.total === 0) {
                     reject(true);
-                });
-            }
-            else {
-                const spotify_artist = data.body.artists.items[0];
-                const spotify_artist_name_search = spotify_artist.name.toLowerCase();
-                log.debug(spotify_artist);
-    
-                infos.name = spotify_artist.name;
-                infos.genres = spotify_artist.genres;
-                infos.id = spotify_artist.id;
-                infos.images = spotify_artist.images;
-    
-                return axios.all([
-                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search)),
-                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search + "_(band)")),
-                    axios.get(wiki_url, use.wiki_params(spotify_artist_name_search + "_(singer)")),
-                    axios.get(music_brainz_url + spotify_artist_name_search),
-                    axios.get(use.url_bands_in_town(spotify_artist_name_search, "asdf"))
-                ]);
-            }
+                }
+                else {
+                    spotify_artist = data.body.artists.items[0];
+                    artist = spotify_artist.name.toLowerCase();
+                    resolve();
+                }
+            });
+        })
+        .then(() => {
+            return collection.findOne({artist: artist});
+        })
+        .then(doc => {
+            return new Promise((resolve, reject) => {
+                if (doc) {
+                    log.debug("from mongodb");
+                    log.debug("infos\n", doc.infos);
+                    res.status(200).end(JSON.stringify({infos: doc.infos}));
+                    reject(false);
+                }
+                else {
+                    resolve();
+                }
+            });
+        })
+        .then(() => {
+            infos.name = artist.name;
+            infos.genres = artist.genres;
+            infos.id = artist.id;
+            infos.images = artist.images;
+
+            return axios.all([
+                axios.get(wiki_url, use.wiki_params(artist)),
+                axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
+                axios.get(wiki_url, use.wiki_params(artist + "_(singer)")),
+                axios.get(music_brainz_url + artist),
+                axios.get(use.url_bands_in_town(artist, "asdf"))
+            ]);
         })
         .then(axios.spread((wk, wk_band, wk_singer, mb, bit) => {
             let check_words = function(str) {
@@ -110,11 +131,20 @@ exports.infos = function(req, res) {
 
             log.debug("infos\n", infos);
             res.status(200).end(JSON.stringify({infos: infos}));
+
+            collection.insert({
+                artist: artist,
+                infos: infos,
+                createdAt: new Date()
+            });
+            log.debug("insert in mongodb");
         }))
         .catch(error => {
-            log.error(error);
-            log.error("artist_not_found");
-            res.status(404).end(JSON.stringify({artist_not_found: true}));
+            if (error) {
+                log.error(error);
+                log.error("artist_not_found");
+                res.status(404).end(JSON.stringify({artist_not_found: true}));
+            }
         });
     }
     else {
