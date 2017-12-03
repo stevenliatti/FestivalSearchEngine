@@ -69,10 +69,10 @@ exports.infos = function(req, res) {
             });
         })
         .then(() => {
-            infos.name = artist.name;
-            infos.genres = artist.genres;
-            infos.id = artist.id;
-            infos.images = artist.images;
+            infos.name = spotify_artist.name;
+            infos.genres = spotify_artist.genres;
+            infos.id = spotify_artist.id;
+            infos.images = spotify_artist.images;
 
             return axios.all([
                 axios.get(wiki_url, use.wiki_params(artist)),
