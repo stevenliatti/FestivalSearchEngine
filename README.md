@@ -4,12 +4,12 @@
 You can access it via [this URL](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080). 
 Examples of routes and doc are [here](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080/routes).
 
-To run locally, you need Node.js with npm installed. In terminal, move to `src` and run :
+To run locally, you need Node.js with npm and MongoDB installed. In terminal, move to `src` and run :
   ```
   npm install
   npm start
   ```
-
+You need to have an instance of MongoDB running too.
 Next, open `http://localhost:8080/` in your browser.
 
 ## Features
@@ -47,5 +47,5 @@ Next, open `http://localhost:8080/` in your browser.
 
 ## Technical stuff
 - Frontend will be coded in HTML and JS mainly
-- Backend will be done through Node.js and Express. The server will be connected to a SQL database to cache the previews URL and maybe other stuff.
+- Backend will be done through Node.js and Express. The server will be connected to a MongoDB database to cache the previews URL and maybe other stuff.
 - We decided not to use JamBase as it is not free and seems to give less informations than Eventful. We'll manage to go through the categories of the search.
