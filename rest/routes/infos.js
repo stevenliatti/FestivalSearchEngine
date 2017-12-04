@@ -77,19 +77,21 @@ exports.infos = function(req, res) {
             return axios.all([
                 axios.get(wiki_url, use.wiki_params(artist)),
                 axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
+                axios.get(wiki_url, use.wiki_params(artist + "_(group)")),
                 axios.get(wiki_url, use.wiki_params(artist + "_(singer)")),
                 axios.get(music_brainz_url + artist),
                 axios.get(use.url_bands_in_town(artist, "asdf"))
             ]);
         })
-        .then(axios.spread((wk, wk_band, wk_singer, mb, bit) => {
+        .then(axios.spread((wk, wk_band, wk_group, wk_singer, mb, bit) => {
             let check_words = function(str) {
                 if (str) {
                     str = str.toLowerCase();
                     let test =
-                        str.includes("band") ||
-                        str.includes("sing") ||
-                        str.includes("song");
+                        str.includes(" band") ||
+                        str.includes(" song") ||
+                        str.includes(" singer") ||
+                        str.includes(" music group");
                     return test;
                 }
                 return false;
@@ -127,6 +129,7 @@ exports.infos = function(req, res) {
 
             check_wiki(wk);
             check_wiki(wk_band);
+            check_wiki(wk_group);
             check_wiki(wk_singer);
 
             log.debug("infos\n", infos);
