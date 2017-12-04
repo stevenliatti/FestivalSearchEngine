@@ -5,9 +5,9 @@
 	<meta name="viewport" content="initial-scale=1.0">
 	<meta charset="utf-8">
 	<link rel="stylesheet" type="text/css" href="style/main.css"><script
-			  src="https://code.jquery.com/jquery-3.2.1.min.js"
-			  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-			  crossorigin="anonymous"></script>
+	src="https://code.jquery.com/jquery-3.2.1.min.js"
+	integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+	crossorigin="anonymous"></script>
 </head>
 <body>
 	<h1>Festival Search Engine</h1>
@@ -19,101 +19,157 @@
 		</form>
 	</div>
 	<span id="loading"><center><strong>Loading...</strong></center></span>
+	<span id="error"><center><strong>Error : no such event</strong></center></span>
 	<div id="map"></div>
 	<div id="markerInfo">
 		<p>Artist image and shit</p>
 		<img src="http://www.designformusic.com/wp-content/uploads/2015/10/insurgency-digital-album-cover-design.jpg">
 	</div>
 	<script>
-		$("#markerInfo").hide();
-		let map;
-		function initMap() {
-			map = new google.maps.Map(document.getElementById("map"), {
-				center: {lat: 46.801111, lng: 8.226667},
-				zoom: 8
+	$("#markerInfo").hide();
+	$("#error").hide();
+	let map;
+	function initMap() {
+		map = new google.maps.Map(document.getElementById("map"), {
+			center: {lat: 46.801111, lng: 8.226667},
+			zoom: 8
+		});
+
+		addMarkers();
+	};
+
+	function addMarkers() {
+		var artistQuery = getURLParameters("artistQuery");
+		var locationQuery = getURLParameters("locationQuery");
+		var JSONQuery;
+		if(artistQuery === undefined && locationQuery === undefined)
+			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=Switzerland";
+		else if(artistQuery === undefined) {
+			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
+			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
+			$.getJSON(geocode).done(function(response) {
+				console.log(response);
+				map.setCenter(response.results[0].geometry.location);
+				map.fitBounds(response.results[0].geometry.bounds);
+			}).fail(function(error) {
+				console.log("error in geocode request : ", error);
 			});
+		}
+		else if(locationQuery === undefined)
+			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=";
+		else
+			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
+		$.getJSON(JSONQuery)
+		.done(function(response) {
+			var markers = [];
+			response.events.forEach(function (event) {
+				var location = {
+					lat: parseFloat(event.latitude),
+					lng: parseFloat(event.longitude)
+				};
+				var marker = new google.maps.Marker({
+					position: location,
+					map: map,
+					title: event.title
+				});
+				var contentString = "<strong>Event info</strong><table>";
+				event.performers.forEach(function(artist) {
+					contentString += "<tr><th>Artist</th><td>" + artist.name + "</td></tr>";
+					if(artist.short_bio != undefined)
+						contentString += "<tr><th>Style / Bio</th><td>" + artist.short_bio + "</td></tr>";
+				});
+				contentString += "</table>";
+				var infowindow = new google.maps.InfoWindow({
+					content: contentString
+				});
 
-			addMarkers();
-		};
+				marker.addListener("click", function(){
+					getArtistInfo(event, event.performers.length);
+				});
+				marker.addListener("mouseover", function(){
+					infowindow.open(map, marker);
+				});
+				marker.addListener("mouseout", function(){
+					infowindow.close();
+				});
+				markers.push(marker);
 
-		function addMarkers() {
-			var artistQuery = getURLParameters("artistQuery");
-			var locationQuery = getURLParameters("locationQuery");
-			var JSONQuery;
-			if(artistQuery === undefined && locationQuery === undefined)
-				JSONQuery = "http://eracnos.ch:8080/events/artist=/location=Switzerland";
-			else if(artistQuery === undefined)
-				JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
-			else if(locationQuery === undefined)
-				JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=";
-			else
-				JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
-			console.log(JSONQuery);
-			$.getJSON(JSONQuery)
-			.done(function(response) {
-				if (response.error) {
-					console.log("server has an error : ", response.error_message);
+				console.log("markers " + event.title + " in " + event.city);
+			});
+			$("#loading").hide();
+		})
+		.fail(function(error) {
+			$("#loading").hide();
+			$("#error").show()
+			console.log("error in events request : ", error);
+		});
+	};
+
+	function getArtistInfo(event, performersCount, artistIndex = 0) {
+		console.log(event);
+		var artistSelected = false;
+		$.getJSON("http://eracnos.ch:8080/infos/artist=" + event.performers[artistIndex].name)
+		.done(function(response) {
+			console.log(response);
+				$.getJSON("http://eracnos.ch:8080/tracks/artist=" + response.infos.name + "/country_code=" + response.infos.country)
+				.done(function(r) {
+				var html = "<audio autoplay><source src=" + r.tracks[0].preview_url + " type='audio/mp3'></audio>";
+
+				for(i = 0 ; i < response.infos.images.length ; i++)
+				{
+					if(response.infos.images[i].width > 400 && i != response.infos.images.length - 1)
+						continue;
+					html += "<img src='" + response.infos.images[i].url + "'>";
+					break;
 				}
-				else {
-					var markers = [];
-					response.events.forEach(function (event) {
-						var location = {
-							lat: parseFloat(event.latitude),
-							lng: parseFloat(event.longitude)
-						};
-						var marker = new google.maps.Marker({
-								position: location,
-								map: map,
-								title: event.title
-							});
-							var contentString = "<strong>Event info</strong><table>";
-							event.performers.forEach(function(artist) {
-								contentString += "<tr><th>Artist</th><td>" + artist.name + "</td></tr>";
-								if(artist.short_bio != undefined)
-									contentString += "<tr><th>Style / Bio</th><td>" + artist.short_bio + "</td></tr>";
-							});
-							contentString += "</table>";
-							var infowindow = new google.maps.InfoWindow({
-          						content: contentString
-        					});
-
-							marker.addListener("click", function(){
-								getArtistInfo();
-							});
-							marker.addListener("mouseover", function(){
-								infowindow.open(map, marker);
-							})
-							marker.addListener("mouseout", function(){
-								infowindow.close();
-							})
-							markers.push(marker);
-
-							console.log("markers " + event.title + " in " + event.city);
-					});
+				html += "<center><h3>" + response.infos.name + "</h3></center>";
+				html += "<a href='" + event.offer + "'>Buy tickets</a>"
+				html += "<p>" + response.infos.description + "</p>";
+				html += "<table>";
+				if(response.infos.type.toLowerCase() === "group") {
+					html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
+					html += "<tr><th>End :</th><td>";
+					if(response.infos.life_span.end === "")
+				 		html += "Still rollin'</td></tr>";
+					else
+						html += response.infos.life_span.end + "</td></tr>";
 				}
-				$("#loading").hide();
+				if(response.infos.facebook !== "")
+					html += "<tr><th>Facebook :</th><td>" + response.infos.facebook + "</td></tr>";
+				html += "</table>";
+
+				console.log(html);
+				$("#markerInfo").html(html);
+				$("#markerInfo").show();
+
+				artistSelected = true;
 			})
 			.fail(function(error) {
-				console.log("error in events request : ", error);
+				console.log("Fail tracks");
+				if(artistIndex + 1 < performersCount)
+					getArtistInfo(event, artistIndex + 1, performersCount);
 			});
-		};
+		}).fail(function(error) {
+			console.log("Fail infos");
+			if(artistIndex + 1 < performersCount)
+				getArtistInfo(event, artistIndex + 1, performersCount);
+		});
+		if(!artistSelected)
+			return;
+	};
 
-		function getArtistInfo() {
-			$("#markerInfo").slideDown();
-		};
+	function getURLParameters(param) {
+		var brutData = decodeURIComponent(window.location.search.substring(1));
+		var URLVariables = brutData.split("&");
+		var i;
+		for(i = 0 ; i < URLVariables.length ; i++) {
+			var URLParameter = URLVariables[i].split("=");
+			if(URLParameter[0] === param)
+			return URLParameter[1];
+		}
 
-		function getURLParameters(param) {
-			var brutData = decodeURIComponent(window.location.search.substring(1));
-			var URLVariables = brutData.split("&");
-			var i;
-			for(i = 0 ; i < URLVariables.length ; i++) {
-				var URLParameter = URLVariables[i].split("=");
-				if(URLParameter[0] === param)
-					return URLParameter[1];
-			}
-
-			return undefined;
-		};
+		return undefined;
+	};
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA&callback=initMap" async defer></script>
 </body>
