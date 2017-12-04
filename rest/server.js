@@ -1,28 +1,17 @@
-const consts = require("./backend/consts");
-const use = require("./backend/use");
-const events = require("./backend/events");
-const infos = require("./backend/infos");
-const tracks = require("./backend/tracks");
+const consts = require("./utilities/consts");
+const use = require("./utilities/use");
+const events = require("./routes/events");
+const infos = require("./routes/infos");
+const tracks = require("./routes/tracks");
 
 const path = require("path");
 
 app.use(cors());
-app.use("/frontend", express.static(path.join(__dirname, "frontend")));
 app.use("/doc", express.static(path.join(__dirname, "doc")));
-
-app.get("/", function(req, res) {
-    log.debug("index.html");
-    res.sendFile(path.join(__dirname, "frontend/index.html"));
-});
 
 app.get("/doc", function(req, res) {
     log.debug("doc");
     res.sendFile(path.join(__dirname, "doc/index.html"));
-});
-
-app.get("/routes", function(req, res) {
-    log.debug("routes");
-    res.sendFile(path.join(__dirname, "frontend/routes.html"));
 });
 
 /**

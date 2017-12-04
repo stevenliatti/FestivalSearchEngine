@@ -1,5 +1,5 @@
-const consts = require('./consts');
-const use = require('./use');
+const consts = require('../utilities/consts');
+const use = require('../utilities/use');
 
 const collection = db.get("tracks");
 const time = 7 * 24 * 3600;

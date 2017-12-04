@@ -1,6 +1,8 @@
 #!/bin/bash
 
 tar xvzf fse.tar.gz fse
+tar xvzf web.tar.gz web
+sudo cp -r web/* /var/www/html/
 cd fse
 pkill -f node
 npm install
