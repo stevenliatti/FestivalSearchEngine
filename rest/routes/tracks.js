@@ -1,6 +1,7 @@
 const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
+// We store queries results for one week
 const collection = db.get("tracks");
 const time = 7 * 24 * 3600;
 collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
@@ -17,6 +18,8 @@ exports.tracks = function(req, res) {
         artist = use.dia(artist).toLowerCase();
         country_code = use.dia(country_code).toLowerCase();
 
+        // First, we correct the name of given artist by making 
+        // a request to Spotify. If there is not artist, we send error.
         use.check_spotify_token()
         .then(() => {
             return spotifyApi.searchArtists(artist);
@@ -34,6 +37,7 @@ exports.tracks = function(req, res) {
                 }
             });
         })
+        // We look in database if there is already results for this query
         .then(() => {
             return collection.findOne({artist: artist, country_code: country_code});
         })
@@ -51,6 +55,7 @@ exports.tracks = function(req, res) {
                 }
             });
         })
+        // If no database results, we make request to Spotify to get top tracks.
         .then(data => {
             return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
         })
@@ -71,6 +76,7 @@ exports.tracks = function(req, res) {
                 });
             });
 
+            // We send results only if there is preview's URL.
             if (preview) {
                 tracks.sort(function(a, b) {
                     return b.popularity - a.popularity;
@@ -79,6 +85,7 @@ exports.tracks = function(req, res) {
                 log.debug("tracks length", tracks.length);
                 res.status(200).end(JSON.stringify({tracks: tracks}));
 
+                // In fine, we insert new data in database
                 collection.insert({
                     artist: artist,
                     country_code: country_code,

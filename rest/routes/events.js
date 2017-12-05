@@ -1,6 +1,7 @@
 const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
+// We store queries results for one day
 const collection = db.get("events");
 const time = 24 * 3600;
 collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
@@ -20,6 +21,8 @@ exports.events = function(req, res) {
         artist = artist != undefined ? use.dia(artist).toLowerCase() : undefined;
         location = location != undefined ? use.dia(location).toLowerCase() : undefined;
 
+        // First, we correct if needed the name of given artist by making 
+        // a request to Spotify
         (function() {
             if (artist != undefined) {
                 return use.check_spotify_token()
@@ -46,6 +49,7 @@ exports.events = function(req, res) {
                 });
             }
         })()
+        // We look in database if there is already results for this query
         .then(() => {
             return collection.findOne({artist: artist, location: location});
         })
@@ -64,7 +68,7 @@ exports.events = function(req, res) {
             });
         })
         .then(() => {
-            // First get request to obtain pages number of eventful data
+            // If no database results, we make get request to obtain pages number of eventful data
             return axios.get(events_search_eventful, {
                 params: {
                     app_key: key_eventful,
@@ -78,6 +82,7 @@ exports.events = function(req, res) {
                 }
             });
         })
+        // We count items and if there is one or more it's continue
         .then(count => {
             let items = parseInt(count.data.total_items);
 
@@ -117,6 +122,8 @@ exports.events = function(req, res) {
         })
         .then(results => {
             // Eventfull processing
+            // For each set of events and for each event, we construct
+            // his performers' array add events if there is at least one performer
             let events = [];            
             results.map(r => r.data.events.event).forEach(events_set => {
                 events_set.forEach(event => {
@@ -168,7 +175,7 @@ exports.events = function(req, res) {
                                 latitude: use.is_defined(event.latitude),
                                 longitude: use.is_defined(event.longitude),
                                 offer: use.is_defined(event.url),
-                                performers: use.is_defined(performers)
+                                performers: performers
                             });
                         }
                     }
@@ -186,6 +193,9 @@ exports.events = function(req, res) {
         })
         .then(events => {
             // BandsInTown comes into play
+            // We add additional infos from BandsInTown only if artist is defined
+            // For an event's array of multiple performers, there is infos route 
+            // to get artist by artist.
             if (artist != undefined) {
                 axios.get(use.url_bands_in_town(artist, "asdf"))
                 .then(resp => {
@@ -210,6 +220,7 @@ exports.events = function(req, res) {
             log.debug("events\n", events);
             log.debug("events length", events.length);
             
+            // In fine, we insert new data in database
             collection.insert({
                 artist: artist,
                 location: location,

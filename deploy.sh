@@ -12,7 +12,7 @@ cp -r web fse
 cp full_install.sh soft_install.sh fse
 tar cvzf fse.tar.gz fse
 
-ssh -i fse.pem -o "StrictHostKeyChecking=no" ubuntu@eracnos.ch "rm -rf fse fse.tar.gz"
+# ssh -i fse.pem -o "StrictHostKeyChecking=no" ubuntu@eracnos.ch "rm -rf fse fse.tar.gz"
 
 scp -i fse.pem -o StrictHostKeyChecking=no fse.tar.gz ubuntu@eracnos.ch:
 rm -rf fse fse.tar.gz

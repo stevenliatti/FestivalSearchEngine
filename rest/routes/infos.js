@@ -1,6 +1,7 @@
 const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
+// We store queries results for one week
 const collection = db.get("infos");
 const time = 7 * 24 * 3600;
 collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
@@ -34,6 +35,8 @@ exports.infos = function(req, res) {
             images: []
         };
 
+        // First, we correct the name of given artist by making 
+        // a request to Spotify. If there is not artist, we send error.
         use.check_spotify_token()
         .then(() => {
             return spotifyApi.searchArtists(artist);
@@ -51,6 +54,7 @@ exports.infos = function(req, res) {
                 }
             });
         })
+        // We look in database if there is already results for this query
         .then(() => {
             return collection.findOne({artist: artist});
         })
@@ -67,12 +71,16 @@ exports.infos = function(req, res) {
                 }
             });
         })
+        // If no database results, we make multiple requests to get infos
+        // from Wikipedia, MusicBrainz and BandsInTown.
         .then(() => {
             infos.name = spotify_artist.name;
             infos.genres = spotify_artist.genres;
             infos.id = spotify_artist.id;
             infos.images = spotify_artist.images;
 
+            // To be as good as possible to get the good wiki,
+            // we send get request with artist name and variants.
             return axios.all([
                 axios.get(wiki_url, use.wiki_params(artist)),
                 axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
@@ -83,6 +91,9 @@ exports.infos = function(req, res) {
             ]);
         })
         .then(axios.spread((wk, wk_band, wk_group, wk_singer, mb, bit) => {
+
+            // And then, with the two next functions, we check if the first paragraph
+            // contains words about music and song.
             let check_words = function(str) {
                 if (str) {
                     str = str.toLowerCase();
@@ -134,6 +145,7 @@ exports.infos = function(req, res) {
             log.debug("infos\n", infos);
             res.status(200).end(JSON.stringify({infos: infos}));
 
+            // In fine, we insert new data in database
             collection.insert({
                 artist: artist,
                 infos: infos,
