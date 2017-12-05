@@ -83,6 +83,7 @@ exports.infos = function(req, res) {
             // we send get request with artist name and variants.
             return axios.all([
                 axios.get(wiki_url, use.wiki_params(artist)),
+                axios.get(wiki_url, use.wiki_params(spotify_artist.name)),
                 axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
                 axios.get(wiki_url, use.wiki_params(artist + "_(group)")),
                 axios.get(wiki_url, use.wiki_params(artist + "_(singer)")),
@@ -90,7 +91,7 @@ exports.infos = function(req, res) {
                 axios.get(use.url_bands_in_town(artist, "asdf"))
             ]);
         })
-        .then(axios.spread((wk, wk_band, wk_group, wk_singer, mb, bit) => {
+        .then(axios.spread((wk, wk_spotify, wk_band, wk_group, wk_singer, mb, bit) => {
 
             // And then, with the two next functions, we check if the first paragraph
             // contains words about music and song.
@@ -138,6 +139,7 @@ exports.infos = function(req, res) {
             }
 
             check_wiki(wk);
+            check_wiki(wk_spotify);
             check_wiki(wk_band);
             check_wiki(wk_group);
             check_wiki(wk_singer);
