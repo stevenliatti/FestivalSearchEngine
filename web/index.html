@@ -51,7 +51,6 @@
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
-				map.setCenter(response.results[0].geometry.location);
 				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
 				map.setZoom(map.getZoom() + 1);
 			}).fail(function(error) {
@@ -84,7 +83,7 @@
 					map: map,
 					title: event.title
 				});
-				var contentString = "<strong>Event info</strong><table>";
+				var contentString = "Event date : <strong>" + event.date + "</strong><table>";
 				event.performers.forEach(function(artist) {
 					contentString += "<tr><th>Artist</th><td>" + artist.name + "</td></tr>";
 					if(artist.short_bio != undefined)
