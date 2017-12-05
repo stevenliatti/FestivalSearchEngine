@@ -1,4 +1,4 @@
-const consts = require('../utilities/consts');
+const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
 const collection = db.get("events");
@@ -22,22 +22,22 @@ exports.events = function(req, res) {
 
         (function() {
             if (artist != undefined) {
-                return spotifyApi.clientCredentialsGrant()
-                .then(data => {
-                    spotifyApi.setAccessToken(data.body['access_token']);
+                return use.check_spotify_token()
+                .then(() => {
                     return spotifyApi.searchArtists(artist);
                 })
                 .then(data => {
                     log.debug("token spotify", spotifyApi.getAccessToken());
-                    if (data.body.artists.total === 0) {
-                        return new Promise((resolve, reject) => {
+                    return new Promise((resolve, reject) => {
+                        if (data.body.artists.total === 0) {
                             reject(true);
-                        });
-                    }
-                    else {
-                        const spotify_artist = data.body.artists.items[0];
-                        artist = spotify_artist.name.toLowerCase();
-                    }
+                        }
+                        else {
+                            const spotify_artist = data.body.artists.items[0];
+                            artist = spotify_artist.name.toLowerCase();
+                            resolve();
+                        }
+                    });
                 });
             }
             else {

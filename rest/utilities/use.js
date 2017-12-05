@@ -1,4 +1,4 @@
-const consts = require('./consts');
+const globals = require('./globals');
 
 exports.url_bands_in_town = function(artist, app_id) {
     return bands_in_town_url + artist + "?app_id=" + app_id;
@@ -17,10 +17,28 @@ exports.wiki_params = function(artist) {
         }
     };
     return p;
-}
+};
 
 exports.is_defined = function(str) {
     return str != null || str != undefined ? str : "";
+};
+
+exports.check_spotify_token = function() {
+    if (manage_token.expires_in <= (new Date().getTime() / 1000)) {
+        log.debug("new token");
+        return spotifyApi.clientCredentialsGrant()
+        .then(data => {
+            manage_token.access_token = data.body.access_token;
+            manage_token.expires_in = (new Date().getTime() / 1000) + data.body.expires_in;
+            return spotifyApi.setAccessToken(data.body['access_token']);
+        });
+    }
+    else {
+        log.debug("token existent");                
+        return new Promise((resolve, reject) => {
+            resolve();
+        });
+    }
 };
 
 // from https://github.com/yvg/js-replace-diacritics

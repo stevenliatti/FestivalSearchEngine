@@ -1,4 +1,4 @@
-const consts = require('../utilities/consts');
+const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
 const collection = db.get("tracks");
@@ -17,9 +17,8 @@ exports.tracks = function(req, res) {
         artist = use.dia(artist).toLowerCase();
         country_code = use.dia(country_code).toLowerCase();
 
-        spotifyApi.clientCredentialsGrant()
-        .then(data => {
-            spotifyApi.setAccessToken(data.body['access_token']);
+        use.check_spotify_token()
+        .then(() => {
             return spotifyApi.searchArtists(artist);
         })
         .then(data => {
@@ -53,7 +52,6 @@ exports.tracks = function(req, res) {
             });
         })
         .then(data => {
-            log.debug("token spotify", spotifyApi.getAccessToken());
             return spotifyApi.getArtistTopTracks(spotify_artist.id, country_code);
         })
         .then(data => {

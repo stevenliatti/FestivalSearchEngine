@@ -4,8 +4,8 @@ app = express(),
 axios = require('axios'),
 
 fs = require('fs'),
-Log = require("log"),
 log = new Log("debug", fs.createWriteStream("fse.log")),
+log = new Log("debug"),
 
 cors = require('cors'),
 
@@ -23,6 +23,10 @@ spotifyApi = new SpotifyWebApi({
     clientId : clientId,
     clientSecret : clientSecret
 }),
+manage_token = {
+    access_token: "",
+    expires_in: 0
+},
 
 key_eventful = "WSpR5fzQ69N3w2FL",
 events_search_eventful = "http://api.eventful.com/json/events/search",

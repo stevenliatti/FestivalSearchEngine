@@ -1,4 +1,4 @@
-const consts = require("./utilities/consts");
+const globals = require("./utilities/globals");
 const use = require("./utilities/use");
 const events = require("./routes/events");
 const infos = require("./routes/infos");

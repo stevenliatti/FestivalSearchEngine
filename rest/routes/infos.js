@@ -1,4 +1,4 @@
-const consts = require('../utilities/consts');
+const globals = require('../utilities/globals');
 const use = require('../utilities/use');
 
 const collection = db.get("infos");
@@ -34,9 +34,8 @@ exports.infos = function(req, res) {
             images: []
         };
 
-        spotifyApi.clientCredentialsGrant()
-        .then(data => {
-            spotifyApi.setAccessToken(data.body['access_token']);
+        use.check_spotify_token()
+        .then(() => {
             return spotifyApi.searchArtists(artist);
         })
         .then(data => {
