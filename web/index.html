@@ -4,7 +4,10 @@
 	<title>Festival Search Engine</title>
 	<meta name="viewport" content="initial-scale=1.0">
 	<meta charset="utf-8">
-	<link rel="stylesheet" type="text/css" href="style/main.css"><script
+	<link rel="stylesheet" type="text/css" href="style/main.css">
+	<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
+	<script
 	src="https://code.jquery.com/jquery-3.2.1.min.js"
 	integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
 	crossorigin="anonymous"></script>
@@ -48,9 +51,9 @@
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
-				console.log(response);
 				map.setCenter(response.results[0].geometry.location);
-				map.fitBounds(response.results[0].geometry.bounds);
+				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
+				map.setZoom(map.getZoom() + 1);
 			}).fail(function(error) {
 				console.log("error in geocode request : ", error);
 			});
@@ -59,9 +62,18 @@
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=";
 		else
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
+		console.log(JSONQuery);
 		$.getJSON(JSONQuery)
 		.done(function(response) {
 			var markers = [];
+			var oms = new OverlappingMarkerSpiderfier(map, {
+  				markersWontMove: true,
+  				markersWontHide: true,
+  				basicFormatEvents: true,
+				keepSpiderfied: true,
+				nearbyDistance:1,
+				legWeight:3
+			});
 			response.events.forEach(function (event) {
 				var location = {
 					lat: parseFloat(event.latitude),
@@ -92,9 +104,14 @@
 				marker.addListener("mouseout", function(){
 					infowindow.close();
 				});
+				oms.trackMarker(marker);
 				markers.push(marker);
 
 				console.log("markers " + event.title + " in " + event.city);
+			});
+			var markerCluster = new MarkerClusterer(map, markers, {
+				imagePath: "images/m",
+				maxZoom: 12
 			});
 			$("#loading").hide();
 		})
@@ -111,20 +128,23 @@
 		$.getJSON("http://eracnos.ch:8080/infos/artist=" + event.performers[artistIndex].name)
 		.done(function(response) {
 			console.log(response);
-				$.getJSON("http://eracnos.ch:8080/tracks/artist=" + response.infos.name + "/country_code=" + response.infos.country)
-				.done(function(r) {
-				var html = "<audio autoplay><source src=" + r.tracks[0].preview_url + " type='audio/mp3'></audio>";
-
-				for(i = 0 ; i < response.infos.images.length ; i++)
-				{
-					if(response.infos.images[i].width > 400 && i != response.infos.images.length - 1)
-						continue;
-					html += "<img src='" + response.infos.images[i].url + "'>";
-					break;
-				}
-				html += "<center><h3>" + response.infos.name + "</h3></center>";
-				html += "<a href='" + event.offer + "'>Buy tickets</a>"
-				html += "<p>" + response.infos.description + "</p>";
+			var html = "";
+			for(i = 0 ; i < response.infos.images.length ; i++)
+			{
+				if(response.infos.images[i].width > 400 && i != response.infos.images.length - 1)
+					continue;
+				html += "<img src='" + response.infos.images[i].url + "'>";
+				break;
+			}
+			html += "<div class='right'><h2>" + response.infos.name + "</h2>";
+			$.getJSON("http://eracnos.ch:8080/tracks/artist=" + response.infos.name + "/country_code=" + response.infos.country)
+			.done(function(r) {
+				console.log(r);
+				html += "<audio autoplay><source src=" + r.tracks[0].preview_url + " type='audio/mp3'></audio>";
+				html += "<p class='musicinfos'>You're listening to <strong>" + r.tracks[0].name;
+				html += "</strong> from album <strong>" + r.tracks[0].album + "</strong>.</p>";
+				html += "<p class='description'>" + response.infos.description + "</p>";
+				html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a></div>";
 				html += "<table>";
 				if(response.infos.type.toLowerCase() === "group") {
 					html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
@@ -135,20 +155,20 @@
 						html += response.infos.life_span.end + "</td></tr>";
 				}
 				if(response.infos.facebook !== "")
-					html += "<tr><th>Facebook :</th><td>" + response.infos.facebook + "</td></tr>";
+					html += "<tr><th>Facebook :</th><td><a href='" + response.infos.facebook + "'>" + response.infos.facebook + "</a></td></tr>";
 				html += "</table>";
 
 				console.log(html);
 				$("#markerInfo").html(html);
 				$("#markerInfo").show();
-
-				artistSelected = true;
 			})
 			.fail(function(error) {
 				console.log("Fail tracks");
 				if(artistIndex + 1 < performersCount)
 					getArtistInfo(event, artistIndex + 1, performersCount);
 			});
+
+			artistSelected = true;
 		}).fail(function(error) {
 			console.log("Fail infos");
 			if(artistIndex + 1 < performersCount)
@@ -165,7 +185,7 @@
 		for(i = 0 ; i < URLVariables.length ; i++) {
 			var URLParameter = URLVariables[i].split("=");
 			if(URLParameter[0] === param)
-			return URLParameter[1];
+			return URLParameter[1].replace(/\+/g, " ");
 		}
 
 		return undefined;
