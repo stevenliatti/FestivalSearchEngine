@@ -61,7 +61,9 @@ exports.tracks = function(req, res) {
 
             let tracks = [];
             data.body.tracks.forEach(track => {
-                preview = track.preview_url != null ? true : false;
+                if (!preview) {
+                    preview = track.preview_url != null ? true : false;
+                }
                 tracks.push({
                     id: use.is_defined(track.id),
                     name: use.is_defined(track.name),
@@ -72,6 +74,9 @@ exports.tracks = function(req, res) {
             });
 
             if (preview) {
+                tracks.sort(function(a, b) {
+                    return b.popularity - a.popularity;
+                });
                 log.debug("tracks\n", tracks);
                 log.debug("tracks length", tracks.length);
                 res.status(200).end(JSON.stringify({tracks: tracks}));
