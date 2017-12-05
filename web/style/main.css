@@ -19,15 +19,67 @@ h1 {
 	font-family: "Bree";
 }
 
+h2 {
+	text-align: center;
+	font-family: "Bree";
+}
+
+a {
+	font-family: "Bree";
+}
+
+.spaced {
+	padding-left: 1%;
+}
+
+.description {
+	font-family: "Verdana";
+	font-size: 0.8em;
+	text-align: justify;
+}
+
+.musicinfos {
+	font-family: "Verdana";
+	font-size: 0.5em;
+}
+
+img {
+
+}
+
 table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	margin: 0 0 2em 0;
+	width: 100%;
 	text-align: left;
 }
 
-td {
-	padding-left: 2%;
+table tbody tr {
+	border: solid 1px #dee1e3;
+	border-left: 0;
+	border-right: 0;
 }
 
-span {
+table tbody tr:nth-child(2n + 1) {
+	background-color: rgba(144, 144, 144, 0.075);
+}
+
+td {
+	padding: 0.75em 0.75em;
+	font-family: "Bree";
+}
+
+th {
+	color: #727a82;
+	font-family: "Bree";
+	font-size: 0.9em;
+	font-weight: 700;
+	padding: 0 0.75em 0.75em 0.75em;
+	text-align: left;
+}
+
+#loading {
 	text-align: center;
 	font-family: "Bree";
 }
@@ -71,4 +123,17 @@ input[type="text"]:focus {
 	left: -9999px;
 	width: 1px;
 	height: 1px;
+}
+
+img {
+	float: left;
+	width: 25%;
+	overflow: hidden;
+	margin : 1%;
+}
+
+.right {
+	margin: 1%;
+	overflow: hidden;
+	vertical-align: middle;
 }
