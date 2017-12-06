@@ -38,13 +38,11 @@ a {
 	text-align: justify;
 }
 
-.musicinfos {
+.musicinfos {
 	font-family: "Verdana";
-	font-size: 0.5em;
-}
-
-img {
-
+	font-size: 0.8em;
+	float: right;
+	font-style: italic;
 }
 
 table {

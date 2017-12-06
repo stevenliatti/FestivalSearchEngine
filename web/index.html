@@ -11,6 +11,7 @@
 	src="https://code.jquery.com/jquery-3.2.1.min.js"
 	integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
 	crossorigin="anonymous"></script>
+	<script src="http://cdn.jsdelivr.net/npm/jquery.scrollto@2.1.2/jquery.scrollTo.min.js"></script>
 </head>
 <body>
 	<h1>Festival Search Engine</h1>
@@ -47,20 +48,30 @@
 		var JSONQuery;
 		if(artistQuery === undefined && locationQuery === undefined)
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=Switzerland";
-		else if(artistQuery === undefined) {
+		else if(artistQuery === "") {
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
+				console.log("GEOCODED");
 				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
 				map.setZoom(map.getZoom() + 1);
 			}).fail(function(error) {
 				console.log("error in geocode request : ", error);
 			});
 		}
-		else if(locationQuery === undefined)
+		else if(locationQuery === "")
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=";
-		else
+		else {
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
+			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
+			$.getJSON(geocode).done(function(response) {
+				console.log("GEOCODED");
+				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
+				map.setZoom(map.getZoom() + 1);
+			}).fail(function(error) {
+				console.log("error in geocode request : ", error);
+			});
+		}
 		console.log(JSONQuery);
 		$.getJSON(JSONQuery)
 		.done(function(response) {
@@ -140,11 +151,11 @@
 			.done(function(r) {
 				console.log(r);
 				html += "<audio autoplay><source src=" + r.tracks[0].preview_url + " type='audio/mp3'></audio>";
-				html += "<p class='musicinfos'>You're listening to <strong>" + r.tracks[0].name;
-				html += "</strong> from album <strong>" + r.tracks[0].album + "</strong>.</p>";
 				html += "<p class='description'>" + response.infos.description + "</p>";
-				html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a></div>";
-				html += "<table>";
+				html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a>";
+				html += "<span class='musicinfos'>You're listening to <strong>" + r.tracks[0].name;
+				html += "</strong> from album <strong>" + r.tracks[0].album + "</strong>.</span>";
+				html += "</div><table>";
 				if(response.infos.type.toLowerCase() === "group") {
 					html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
 					html += "<tr><th>End :</th><td>";
@@ -160,6 +171,7 @@
 				console.log(html);
 				$("#markerInfo").html(html);
 				$("#markerInfo").show();
+				$(window).scrollTo("max");
 			})
 			.fail(function(error) {
 				console.log("Fail tracks");
@@ -176,6 +188,14 @@
 		if(!artistSelected)
 			return;
 	};
+
+	// function goToByScroll(id) {
+    // id = id.replace("link", "");
+    //   // Scroll
+    // $('html,body').animate({
+    //     scrollTop: $("#"+id).offset().top},
+    //     'slow');
+	// }
 
 	function getURLParameters(param) {
 		var brutData = decodeURIComponent(window.location.search.substring(1));
