@@ -36,7 +36,8 @@
 	function initMap() {
 		map = new google.maps.Map(document.getElementById("map"), {
 			center: {lat: 46.801111, lng: 8.226667},
-			zoom: 8
+			zoom: 8,
+			maxZoom: 16
 		});
 
 		addMarkers();
@@ -52,7 +53,6 @@
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
-				console.log("GEOCODED");
 				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
 				map.setZoom(map.getZoom() + 1);
 			}).fail(function(error) {
@@ -65,14 +65,12 @@
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
-				console.log("GEOCODED");
 				map.fitBounds(new google.maps.LatLngBounds(response.results[0].geometry.bounds.southwest, response.results[0].geometry.bounds.northeast));
 				map.setZoom(map.getZoom() + 1);
 			}).fail(function(error) {
 				console.log("error in geocode request : ", error);
 			});
 		}
-		console.log(JSONQuery);
 		$.getJSON(JSONQuery)
 		.done(function(response) {
 			var markers = [];
@@ -94,7 +92,8 @@
 					map: map,
 					title: event.title
 				});
-				var contentString = "Event date : <strong>" + event.date + "</strong><table>";
+				var contentString = "<h4><center>" + event.title + " @ " + event.venue + "</center></h4>";
+				contentString += "<table><tr><th>Event date</th><td>" + event.date + "</td></tr>";
 				event.performers.forEach(function(artist) {
 					contentString += "<tr><th>Artist</th><td>" + artist.name + "</td></tr>";
 					if(artist.short_bio != undefined)
@@ -116,8 +115,6 @@
 				});
 				oms.trackMarker(marker);
 				markers.push(marker);
-
-				console.log("markers " + event.title + " in " + event.city);
 			});
 			var markerCluster = new MarkerClusterer(map, markers, {
 				imagePath: "images/m",
@@ -149,12 +146,12 @@
 			html += "<div class='right'><h2>" + response.infos.name + "</h2>";
 			$.getJSON("http://eracnos.ch:8080/tracks/artist=" + response.infos.name + "/country_code=" + response.infos.country)
 			.done(function(r) {
-				console.log(r);
-				html += "<audio autoplay><source src=" + r.tracks[0].preview_url + " type='audio/mp3'></audio>";
+				var previewIndex = Math.floor((Math.random() * (r.tracks.length - 1)));
+				html += "<audio autoplay><source src=" + r.tracks[previewIndex].preview_url + " type='audio/mp3'></audio>";
 				html += "<p class='description'>" + response.infos.description + "</p>";
 				html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a>";
-				html += "<span class='musicinfos'>You're listening to <strong>" + r.tracks[0].name;
-				html += "</strong> from album <strong>" + r.tracks[0].album + "</strong>.</span>";
+				html += "<span class='musicinfos'>You're listening to <strong>" + r.tracks[previewIndex].name;
+				html += "</strong> from album <strong>" + r.tracks[previewIndex].album + "</strong>.</span>";
 				html += "</div><table>";
 				if(response.infos.type.toLowerCase() === "group") {
 					html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
@@ -177,25 +174,32 @@
 				console.log("Fail tracks");
 				if(artistIndex + 1 < performersCount)
 					getArtistInfo(event, artistIndex + 1, performersCount);
+				else {
+					var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
+					html += " :(</center></h2>";
+					$("#markerInfo").html(html);
+					$("#markerInfo").show();
+				}
 			});
-
 			artistSelected = true;
 		}).fail(function(error) {
 			console.log("Fail infos");
 			if(artistIndex + 1 < performersCount)
 				getArtistInfo(event, artistIndex + 1, performersCount);
+			else {
+				var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
+				html += " :(</center></h2>";
+				$("#markerInfo").html(html);
+				$("#markerInfo").show();
+			}
 		});
-		if(!artistSelected)
-			return;
+		if(!artistSelected) {
+			var html = "<h2><center>Loading infos for artist : " + event.performers[artistIndex].name;
+			html += "</center></h2>";
+			$("#markerInfo").html(html);
+			$("#markerInfo").show();
+		}
 	};
-
-	// function goToByScroll(id) {
-    // id = id.replace("link", "");
-    //   // Scroll
-    // $('html,body').animate({
-    //     scrollTop: $("#"+id).offset().top},
-    //     'slow');
-	// }
 
 	function getURLParameters(param) {
 		var brutData = decodeURIComponent(window.location.search.substring(1));
