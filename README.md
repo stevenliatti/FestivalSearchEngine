@@ -1,8 +1,8 @@
 # Festival Search Engine
 
 ## Installation and run
-You can access it via [this URL](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080). 
-Examples of routes and doc are [here](http://ec2-34-215-131-174.us-west-2.compute.amazonaws.com:8080/routes).
+You can access it via [this URL](http://eracnos.ch). 
+Examples of routes and doc are [here](http://eracnos.ch/routes.html).
 
 To run locally, you need Node.js with npm and MongoDB installed. In terminal, move to `src` and run :
   ```
