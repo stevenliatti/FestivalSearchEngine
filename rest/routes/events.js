@@ -231,6 +231,7 @@ exports.events = function(req, res) {
         })
         .catch(error => {
             if (error) {
+                log.error(error);
                 log.error("no_events");
                 res.status(404).end(JSON.stringify({no_events: true}));
             }

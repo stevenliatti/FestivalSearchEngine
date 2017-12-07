@@ -1,28 +1,12 @@
 const globals = require('./globals');
 
+exports.is_defined = function(str) {
+    return str != null || str != undefined ? str : "";
+};
+
 // Create URL for BandsInTown
 exports.url_bands_in_town = function(artist, app_id) {
     return bands_in_town_url + artist + "?app_id=" + app_id;
-};
-
-// Create URL parameters for Wikipedia
-exports.wiki_params = function(artist) {
-    let p = {
-        params: {
-            format: "json",
-            action: "query",
-            prop: "extracts",
-            exintro: "",
-            explaintext: "",
-            indexpageids: "",
-            titles: artist
-        }
-    };
-    return p;
-};
-
-exports.is_defined = function(str) {
-    return str != null || str != undefined ? str : "";
 };
 
 // Check if token Spotify is already valid, else reach a new one.

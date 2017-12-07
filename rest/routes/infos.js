@@ -6,6 +6,24 @@ const collection = db.get("infos");
 const time = 7 * 24 * 3600;
 collection.createIndex({ "createdAt": 1 }, { expireAfterSeconds: time });
 
+const criteria = [/\bband\b/, /\bsong\b/, /\bsinger\b/, /\bmusic group\b/, /\bsongwriter\b/, /\brapper\b/];
+
+// Create URL parameters for get Wikipedia page
+let wiki_page = function(id) {
+    let p = {
+        params: {
+            format: "json",
+            action: "query",
+            prop: "extracts|pageviews",
+            exintro: "",
+            explaintext: "",
+            indexpageids: "",
+            pageids: id
+        }
+    };
+    return p;
+};
+
 exports.infos = function(req, res) {
     log.debug("request url", req.url);
     log.debug("request params", req.params);
@@ -79,47 +97,23 @@ exports.infos = function(req, res) {
             infos.id = spotify_artist.id;
             infos.images = spotify_artist.images;
 
-            // To be as good as possible to get the good wiki,
-            // we send get request with artist name and variants.
+            // We send get request with artist name and variants to wiki search
             return axios.all([
-                axios.get(wiki_url, use.wiki_params(artist)),
-                axios.get(wiki_url, use.wiki_params(spotify_artist.name)),
-                axios.get(wiki_url, use.wiki_params(artist + "_(band)")),
-                axios.get(wiki_url, use.wiki_params(artist + "_(group)")),
-                axios.get(wiki_url, use.wiki_params(artist + "_(singer)")),
+                axios.get(wiki_url, {
+                    params: {
+                        format: "json",
+                        action: "query",
+                        list: "search",
+                        srlimit: 20,
+                        srsearch: spotify_artist.name
+                    }
+                }),
                 axios.get(music_brainz_url + artist),
                 axios.get(use.url_bands_in_town(artist, "asdf"))
             ]);
         })
-        .then(axios.spread((wk, wk_spotify, wk_band, wk_group, wk_singer, mb, bit) => {
-
-            // And then, with the two next functions, we check if the first paragraph
-            // contains words about music and song.
-            let check_words = function(str) {
-                if (str) {
-                    str = str.toLowerCase();
-                    let test =
-                        str.includes(" band") ||
-                        str.includes(" song") ||
-                        str.includes(" singer") ||
-                        str.includes(" music group");
-                    return test;
-                }
-                return false;
-            };
-    
-            let check_wiki = function(wk) {
-                if (wk.data) {
-                    if (wk.data.query.pages) {
-                        const id = wk.data.query.pageids[0];
-                        const wiki = wk.data.query.pages[id];
-                        if (check_words(wiki.extract)) {
-                            infos.description = wiki.extract;
-                        }
-                    }
-                }
-            };
-
+        .then(axios.spread((wk, mb, bit) => {
+            // We set infos from BandsInTown and MusicBrainz
             infos.image = use.is_defined(bit.data.image_url);
             infos.thumb = use.is_defined(bit.data.thumb_url);
             infos.facebook = use.is_defined(bit.data.facebook_page_url);
@@ -137,12 +131,49 @@ exports.infos = function(req, res) {
                     infos.life_span.end = use.is_defined(mb_life_span.end);
                 }
             }
+    
+            // Next, foreach page id receive from Wikipedia, we check if the snippet
+            // meets several criteria and add it to an array of get requests (pageids)
+            if (wk.data.query.searchinfo.totalhits != 0) {
+                let pageids = [];
+                const pages = wk.data.query.search;
+                
+                for (let page of pages) {
+                    const contain_criteria = criteria.some(c => c.test(page.snippet));
+                    const contain_genres = new RegExp(infos.genres.join("|"), "i").test(page.snippet);
+                    const contain_name = new RegExp(spotify_artist.name, "i").test(page.title);
+                    
+                    if ((contain_criteria || contain_genres) && contain_name) {
+                        pageids.push(axios.get(wiki_url, wiki_page(page.pageid)));
+                    }
+                }
 
-            check_wiki(wk);
-            check_wiki(wk_spotify);
-            check_wiki(wk_band);
-            check_wiki(wk_group);
-            check_wiki(wk_singer);
+                // If there is pageids, we send more requests to Wikipedia
+                if (pageids.length > 0) { return axios.all(pageids); }
+                else { return new Promise((resolve, reject) => { resolve(); }); }
+            }
+            else { return new Promise((resolve, reject) => { resolve(); }); }
+        }))
+        .then(results => {
+            // Finally (with Wikipedia), we compute a "score" from each page, based on
+            // the number of views for each page. To set infos.description, we take the 
+            // page with best score.
+            if (results != undefined) {
+                let pages = [];
+                results.map(r => r.data.query).forEach(page => {
+                    let id = page.pageids[0];
+                    let sum = 0;
+                    let pageviews = page.pages[id].pageviews;
+                    for (let c in pageviews) {
+                        sum += pageviews[c] != null ? pageviews[c] : 0;
+                    }
+                    pages.push({score: sum, extract: page.pages[id].extract});
+                });
+                pages.sort(function(a, b) {
+                    return b.score - a.score;
+                });
+                infos.description = pages[0].extract;
+            }
 
             log.debug("infos\n", infos);
             res.status(200).end(JSON.stringify({infos: infos}));
@@ -154,7 +185,7 @@ exports.infos = function(req, res) {
                 createdAt: new Date()
             });
             log.debug("insert in mongodb");
-        }))
+        })
         .catch(error => {
             if (error) {
                 log.error(error);
