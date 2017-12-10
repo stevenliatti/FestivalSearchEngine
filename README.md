@@ -18,16 +18,9 @@ Next, open `http://localhost:8080/` in your browser.
 - Welcome page with a search textbox and a swiss google map with a (cached) list of all main swiss festival as markers
 
   - API Route : Eventful (GET /events/search with this parameters : position, categories, dates)
-  - Search : Eventful for performers, BandsInTown for artist's Facebook or images, MusicBrainz (maybe for later) to get more important stuff. Use Eventful for date and BandsInTown can complement Eventful, especially when searching an artist. Search can be made by artist, date, location and updates the markers displayed on the map. API Routes :
-    - Artist : 
-      - Eventful : GET /performers/search
-      - BandsInTown : GET /artists/{artistname}/events
-      - MusicBrainz : GET /ws/2/artist/?query=artist:<artist>
-    - Date :
-      - Eventful : GET /events/search
-      - BandsInTown : GET /artists/{artistname}/events (artist id get from Eventful)
-    - Location : 
-      - Eventful : GET /venues/search
+  - Search : Eventful for performers, BandsInTown for artist's Facebook or images, MusicBrainz (maybe for later) to get more important stuff. Use Eventful for date and BandsInTown can complement Eventful, especially when searching an artist. Search can be made by artist and location and updates the markers displayed on the map. API Route :
+    - Eventful : GET /events/search
+    - BandsInTown : GET /artists/{artistname}/events
   - BandsInTown also helps to get thumb images of groups.
 
 ![bubble](mockup/bubble.png)
@@ -41,9 +34,7 @@ Next, open `http://localhost:8080/` in your browser.
 
 
 ### Optional features
-- Perform a search by radius with Eventful
 - Click on the artist of a displayed lineup to perform a search with this artist
-- Check top tracks and artists on Spotify to complete list markers on map
 
 ## Technical stuff
 - Frontend will be coded in HTML and JS mainly

@@ -21,8 +21,10 @@ app.get("/doc", function(req, res) {
  * @apiGroup events
  * @apiVersion  0.1.0
  * 
- * @apiDescription Return futur events in function of artist and location from Eventful and BandsInTown.
- * Fix the name of the artist by making a request to Spotify.
+ * @apiDescription Return futur events in function of artist and location from Eventful and BandsInTown,
+ * with API methods <a href="http://api.eventful.com/docs/events/search">/events/search</a> and 
+ * <a href="https://app.swaggerhub.com/apis/Bandsintown/PublicAPI/3.0.0#/single_artist_information/artist">/artists/{artistname}</a> respectively.
+ * Fix the name of the artist by making a request to <a href="https://developer.spotify.com/web-api/search-item/">Spotify Search</a>.
  * Artist and location params cannot be empty at same time (no_params_provided error).
  * To note that all string fields can be string empty ("").
  * 
@@ -110,8 +112,11 @@ app.get("/events/artist=:artist?/location=:location?", events.events);
  * @apiGroup infos
  * @apiVersion  0.1.0
  * 
- * @apiDescription Return infos about artist from Wikipedia, MusicBrainz and BandsInTown.
- * Fix the name of the artist by making a request to Spotify.
+ * @apiDescription Return infos about artist from 
+ * <a href="https://en.wikipedia.org/w/api.php?action=help&modules=main">Wikipedia API</a>, 
+ * <a href="https://musicbrainz.org/doc/Development/JSON_Web_Service">MusicBrainz</a> and 
+ * <a href="https://app.swaggerhub.com/apis/Bandsintown/PublicAPI/3.0.0#/single_artist_information/artist">BandsInTown</a>.
+ * Fix the name of the artist by making a request to <a href="https://developer.spotify.com/web-api/search-item/">Spotify Search</a>.
  * To note that all string fields can be string empty ("").
  * 
  * @apiParam  {String} artist Artist name
@@ -186,8 +191,8 @@ app.get("/infos/artist=:artist?", infos.infos);
  * @apiVersion  0.1.0
  *
  * @apiDescription Return the top-tracks infos for this artist and country code from Spotify.
- * Fix the name of the artist by making a request to Spotify.
- * Also contains the track preview's URL if existent.
+ * Fix the name of the artist by making a request to <a href="https://developer.spotify.com/web-api/search-item/">Spotify Search</a>.
+ * Also contains the track preview's URL if existent (<a href="https://developer.spotify.com/web-api/get-artists-top-tracks/">Top tracks</a> route).
  * To note that all string fields can be string empty ("").
  * 
  * @apiParam  {String} artist The artist name

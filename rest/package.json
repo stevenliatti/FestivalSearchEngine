@@ -2,9 +2,11 @@
     "name": "festivalsearchengine",
     "version": "0.1.0",
     "main": "server.js",
-    "description": "Festival Search Engine",
+    "description": "Use of axios, cors, express, monk and (wrapper) spotify-web-api-node like main dependencies.",
     "apidoc": {
-        "title": "Festival Search Engine API"
+        "name": "Festival Search Engine API",
+        "title": "Festival Search Engine API",
+        "url": "http://eracnos.ch:8080"
     },
     "dependencies": {
         "axios": "^0.17.1",

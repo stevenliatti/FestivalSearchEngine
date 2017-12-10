@@ -1,4 +1,4 @@
-\documentclass{beamer}
+\documentclass[10pt]{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
@@ -44,15 +44,38 @@
 \end{frame}
 
 \begin{frame}
-	\setcounter{tocdepth}{3}
-	\tableofcontents
+	\setcounter{tocdepth}{2}
+    \frametitle{Plan}
+    \begin{columns}[t]
+        \begin{column}{.5\textwidth}
+            \tableofcontents[sections={1-2}]
+        \end{column}
+        \begin{column}{.5\textwidth}
+            \tableofcontents[sections={3-4}]
+        \end{column}
+    \end{columns}
 \end{frame}
 
+
+
 \section{Introduction}
+\subsection{Buts du projet}
+\begin{frame}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	Créer un moteur de recherche d'événements musicaux, permettant à l'utilisateur de :
+	\begin{itemize}
+		\item Afficher des événements sur une carte interactive
+		\item Afficher des informations d'un événement en particulier
+		\item Afficher des informations à propos des artistes
+		\item Jouer (en arrière plan) un extrait d'un son d'un artiste de l'événement
+	\end{itemize}
+\end{frame}
 \subsection{API utilisées}
 \begin{frame}
 	\frametitle{\secname}
 	\framesubtitle{\subsecname}
+	Pour réaliser cette web app, nous avons utilisé les API suivantes :
 	\begin{itemize}
 		\item Spotify : recherche d'artistes et top tracks (route \mintinline{text}{events}, \mintinline{text}{infos} et \mintinline{text}{tracks})
 		\item Eventful : liste des événements (lieux, dates et artistes) (route \mintinline{text}{events})
@@ -64,52 +87,109 @@
 
 \section{Serveur}
 \subsection{Généralités}
-\subsubsection{Promesses}
-\begin{frame}
-	\frametitle{\subsecname}
-	\framesubtitle{\subsubsecname}    
-	\begin{figure}
-		\begin{center}
-			\includegraphics[width=1.0\textwidth]{images/hepia.jpg}
-		\end{center}
-		\caption{hepia}
-		% \label{conso_ordis}
-	\end{figure}
+\subsubsection{Node.js et Promesses}
+\begin{frame}[fragile]
+	\frametitle{\secname}
+	\framesubtitle{\subsubsecname}
+	Serveur Node.js avec structure basée sur les promesses (Promise) :
+	\begin{minted}[linenos]{javascript}
+let doSomething = function(data) {
+  return new Promise((resolve, reject) => {
+    if (test) resolve(data);
+    else reject("error");
+  });
+}
+doSomething()
+.then(result => { return doSomethingElse(result); })
+.then(finalResult => { console.log("OK :" + finalResult); })
+.catch(error => { console.log(error); });
+	\end{minted}
 \end{frame}
-
 
 \subsection{Route \mintinline{text}{events}}
 \begin{frame}
-	\frametitle{\subsecname}
-	\framesubtitle{\subsubsecname}
-	\begin{columns}[T]
-		\begin{column}{.25\textwidth}
-			\begin{figure}
-				\includegraphics[width=0.6\textwidth]{images/hesso.jpg}
-				\caption{hesso}
-			\end{figure}
-		\end{column}
-		\begin{column}{.75\textwidth}
-			\begin{itemize}
-				\item 2 colonnes
-			\end{itemize}
-		\end{column}
-	\end{columns}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	\begin{figure}
+		\begin{center}
+			\includegraphics[width=0.75\textwidth]{images/events.png}
+		\end{center}
+		\caption{Route events}
+	\end{figure}
 \end{frame}
 
 \subsection{Route \mintinline{text}{infos}}
+\begin{frame}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	\begin{figure}
+		\begin{center}
+			\includegraphics[width=0.75\textwidth]{images/infos.png}
+		\end{center}
+		\caption{Route infos}
+	\end{figure}
+\end{frame}
+
 \subsection{Route \mintinline{text}{tracks}}
-\subsection{Déployé sur AWS}
+\begin{frame}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	\begin{figure}
+		\begin{center}
+			\includegraphics[width=0.75\textwidth]{images/tracks.png}
+		\end{center}
+		\caption{Route tracks}
+	\end{figure}
+\end{frame}
+
+\subsection{MongoDB}
+\begin{frame}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	Utilisation de MongoDB comme base de données :
+	\begin{itemize}
+		\item Simplicité/compatibilité avec Javascript et Node.js (JSON)
+		\item Données "temporaires" avec la feature MongoDB Time To Live
+		\item Découverte d'un SGBD alternatif (NoSQL)
+	\end{itemize}
+\end{frame}
+
+\subsection{Déploiement sur AWS}
+\begin{frame}
+	\frametitle{\secname}
+	\framesubtitle{\subsecname}
+	Utilisation du cloud AWS d'Amazon (avec scripts shell pour le déploiement) :
+	\begin{itemize}
+		\item Pour héberger le serveur Node.js
+		\item Pour héberger la base de données MongoDB
+		\item Pour héberger la documentation de l'API
+		\item Pour héberger le serveur Apache pour servir les fichiers client (HTML)
+		\item Mettre en pratique le cours de Cloud
+	\end{itemize}
+\end{frame}
 
 \section{Client}
-
-\section{Conclusion}
 \begin{frame}
 	\frametitle{\secname}
 	\begin{itemize}
 		\item 
 	\end{itemize}
 	\Large\textbf{texte important}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+	\frametitle{\secname}
+	Steven :
+	\begin{itemize}
+		\item Approfondissement de Node.js et découverte des Promise Javascript et de MongoDB
+		\item Découverte de bonnes (Spotify, Wikipédia) et "moins bonnes" (MusicBrainz, Eventful) API
+	\end{itemize}
+	Vincent :
+	\begin{itemize}
+		\item 
+	\end{itemize}
+	\Large\textbf{Beaucoup de plaisir à travailler sur ce projet}
 \end{frame}
 
 \end{document}
