@@ -14,9 +14,9 @@
 	<script src="http://cdn.jsdelivr.net/npm/jquery.scrollto@2.1.2/jquery.scrollTo.min.js"></script>
 </head>
 <body>
-	<a id="titlelink" href="index.html"><h1>Festival Search Engine</h1></a>
+	<a class="titlelink" href="index.html"><h1>Festival Search Engine</h1></a>
 	<div id="search">
-		<form id="searchForm" action="/" method="get">
+		<form id="searchForm" action="index.html" method="get">
 			<input type="text" placeholder="Search an artist" name="artistQuery">
 			<input type="text" placeholder="Search a location" name="locationQuery">
 			<input type="submit" class="hidden" tabindex="-1">
@@ -50,7 +50,7 @@
 		var JSONQuery;
 		if(artistQuery === undefined && locationQuery === undefined)
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=Switzerland";
-		else if(artistQuery === "") {
+		else if(artistQuery === undefined || artistQuery === "") {
 			JSONQuery = "http://eracnos.ch:8080/events/artist=/location=" + locationQuery + "";
 			geocode = "https://maps.googleapis.com/maps/api/geocode/json?address=" + locationQuery + "&key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA";
 			$.getJSON(geocode).done(function(response) {
@@ -60,7 +60,7 @@
 				console.log("error in geocode request : ", error);
 			});
 		}
-		else if(locationQuery === "")
+		else if(locationQuery === undefined || locationQuery === "")
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=";
 		else {
 			JSONQuery = "http://eracnos.ch:8080/events/artist=" + artistQuery + "/location=" + locationQuery;
@@ -146,7 +146,8 @@
 				$("#left").html("<img src='" + response.infos.images[i].url + "'>");
 				break;
 			}
-			var html = "<h2>" + response.infos.name + "</h2>";
+			var html = "<h2><a class='titlelink' href='index.html?artistQuery=" + response.infos.name.replace(/ /g, "+") + "'>"
+			html += response.infos.name + "</a></h2>";
 			html += "<p class='description'>" + response.infos.description + "</p>";
 			html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a>";
 			html += "<span id='musicinfos' class='musicinfos'>";

@@ -19,23 +19,23 @@ h1, h2, h3, h4 {
 	font-family: "Bree";
 }
 
-a#titlelink:link{
+a.titlelink:link{
   color:black;
   text-decoration: none;
 }
-a#titlelink:visited{
+a.titlelink:visited{
   color:black;
   text-decoration: none;
 }
-a#titlelink:hover{
+a.titlelink:hover{
   color:black;
   text-decoration: none;
 }
-a#titlelink:focus{
+a.titlelink:focus{
   color:black;
   text-decoration: none;
 }
-a#titlelink:active{
+a.titlelink:active{
   color:red;
   text-decoration: none;
 }
@@ -91,6 +91,10 @@ th {
 	font-weight: 700;
 	padding: 0 0.75em 0.75em 0.75em;
 	text-align: left;
+}
+
+#markerInfo {
+	margin: 1%;
 }
 
 #loading {
