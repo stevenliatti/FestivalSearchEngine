@@ -25,6 +25,7 @@
 	<span id="loading"><center><strong>Loading...</strong></center></span>
 	<span id="error"><center><strong>Error : no such event</strong></center></span>
 	<div id="map"></div>
+	<div id="artistSelection"></div>
 	<div id="markerInfo">
 		<div id="left"></div>
 		<div id="right"></div>
@@ -106,7 +107,12 @@
 				});
 
 				marker.addListener("click", function(){
-					getArtistInfo(event, event.performers.length);
+					$("#right").html("");
+					$("#left").html("");
+					$("#audioStuff").html("");
+					$("#artistSelection").html("");
+					$("#markerInfo").hide();
+					displaySelectionScreen(event, event.performers.length);
 				});
 				marker.addListener("mouseover", function(){
 					infowindow.open(map, marker);
@@ -130,12 +136,39 @@
 		});
 	};
 
-	function getArtistInfo(event, performersCount, artistIndex = 0) {
+
+	function displaySelectionScreen(event, performersCount, artistIndex = 0) {
+		if(performersCount == 1) {
+			getArtistInfo(event.performers[0], event);
+			return;
+		}
+		var html = "<h2>Select an artist :</h2>";
+		event.performers.forEach(function (artist, i) {
+			html += "<span class='artist' artistID='" + i + "'>";
+			if(artist.thumb != "")
+				html += "<img src='" + artist.thumb + "'>";
+			else if(artist.image != "")
+				html += "<img src='" + artist.image + "'>";
+			html += "<h4>" + artist.name + "</h4></span>";
+		});
+
+		$("#artistSelection").html(html);
+		$("span.artist").click(function () {
+			$("#artistSelection").html("");
+			$("#artistSelection").hide();
+			var id = $(this).attr("artistID");
+			getArtistInfo(event.performers[id], event);
+		});
+		$("#artistSelection").show();
+	}
+
+	function getArtistInfo(artistInfos, event) {
 		console.log(event);
 		var infosFound = false;
 		var trackFound = "";
+		var popularTracks = "";
 
-		$.getJSON("http://eracnos.ch:8080/infos/artist=" + event.performers[artistIndex].name)
+		$.getJSON("http://eracnos.ch:8080/infos/artist=" + artistInfos.name)
 		.done(function(response) {
 			console.log(response);
 			for(i = 0 ; i < response.infos.images.length ; i++)
@@ -165,6 +198,19 @@
 			}
 			if(response.infos.facebook !== "")
 				html += "<tr><th>Facebook :</th><td><a href='" + response.infos.facebook + "'>" + response.infos.facebook + "</a></td></tr>";
+			html += "<tr><th>Style</th><td>";
+			response.infos.genres.forEach(function(genre, i) {
+				if(i < 4) {
+					html += genre;
+					if(i < response.infos.genres.length - 1 && i < 3)
+						html += " / ";
+				}
+			});
+			html += "</td></tr>";
+			html += "<tr><th>Popular tracks</th><td id='popularTracks'>";
+			if(popularTracks != "")
+				html += popularTracks;
+			html += "</td></tr>";
 			html += "</table>";
 			console.log(html);
 			$("#right").html(html);
@@ -174,18 +220,18 @@
 		})
 		.fail(function(error) {
 			console.log("Fail infos");
-			var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
+			var html = "<h2><center>No more infos for artist : " + artistInfos.name;
 			html += " :(</center></h2><span id='musicinfos' class='musicinfos'>";
 			if(trackFound != "")
 				html += trackFound;
 			html += "</span>";
 			$("#right").html(html);
-			$("#left").html("");
+			//$("#left").html("");
 			infosFound = true;
 			$("#markerInfo").show();
 		});
 
-		$.getJSON("http://eracnos.ch:8080/tracks/artist=" + event.performers[artistIndex].name + "/country_code=US")
+		$.getJSON("http://eracnos.ch:8080/tracks/artist=" + artistInfos.name + "/country_code=US")
 		.done(function(response) {
 			var previewIndex = Math.floor((Math.random() * (response.tracks.length - 1)));
 			while(response.tracks[previewIndex].preview_url == "")
@@ -194,13 +240,20 @@
 			$("#audioStuff").html(html);
 			html = "You're listening to <strong>" + response.tracks[previewIndex].name;
 			html += "</strong> from album <strong>" + response.tracks[previewIndex].album + "</strong>.";
-			//$("#musicinfos2").html(html);
 			trackFound = html;
 			if(infosFound)
 				$("#musicinfos").html(html);
+			html = "<ol>"
+			for (i = 0; i < response.tracks.length && i < 3 ; i++) {
+    			html += "<li>" + response.tracks[i].name + " in " + response.tracks[i].album + "</li>";
+			}
+			html += "</ol>";
+			popularTracks = html;
+			$("#popularTracks").html(popularTracks);
 		})
 		.fail(function(error) {
 			console.log("Fail tracks");
+			$("#popularTracks").html("Not found");
 			// if(artistIndex + 1 < performersCount)
 			// 	getArtistInfo(event, artistIndex + 1, performersCount);
 			// else {
@@ -212,10 +265,10 @@
 		});
 
 		// if(!artistSelected) {
-		// 	var html = "<h2><center>Loading infos for artist : " + event.performers[artistIndex].name;
-		// 	html += "</center></h2>";
-		// 	$("#markerInfo").html(html);
-		// 	$("#markerInfo").show();
+		var html = "<h2><center>Loading infos for artist : " + artistInfos.name;
+		html += "</center></h2>";
+		$("#right").html(html);
+		$("#markerInfo").show();
 		// }
 	};
 

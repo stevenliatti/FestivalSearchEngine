@@ -93,6 +93,15 @@ th {
 	text-align: left;
 }
 
+ol {
+	margin: -0.5%;
+	margin-left: -2.5%;
+}
+
+#artistSelection {
+	margin: 1%;
+}
+
 #markerInfo {
 	margin: 1%;
 }
