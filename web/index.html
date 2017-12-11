@@ -14,7 +14,7 @@
 	<script src="http://cdn.jsdelivr.net/npm/jquery.scrollto@2.1.2/jquery.scrollTo.min.js"></script>
 </head>
 <body>
-	<h1>Festival Search Engine</h1>
+	<a id="titlelink" href="index.html"><h1>Festival Search Engine</h1></a>
 	<div id="search">
 		<form id="searchForm" action="/" method="get">
 			<input type="text" placeholder="Search an artist" name="artistQuery">
@@ -26,9 +26,10 @@
 	<span id="error"><center><strong>Error : no such event</strong></center></span>
 	<div id="map"></div>
 	<div id="markerInfo">
-		<p>Artist image and shit</p>
-		<img src="http://www.designformusic.com/wp-content/uploads/2015/10/insurgency-digital-album-cover-design.jpg">
+		<div id="left"></div>
+		<div id="right"></div>
 	</div>
+	<div id="audioStuff"></div>
 	<script>
 	$("#markerInfo").hide();
 	$("#error").hide();
@@ -131,74 +132,90 @@
 
 	function getArtistInfo(event, performersCount, artistIndex = 0) {
 		console.log(event);
-		var artistSelected = false;
+		var infosFound = false;
+		var trackFound = "";
+
 		$.getJSON("http://eracnos.ch:8080/infos/artist=" + event.performers[artistIndex].name)
 		.done(function(response) {
 			console.log(response);
-			var html = "";
 			for(i = 0 ; i < response.infos.images.length ; i++)
 			{
 				if(response.infos.images[i].width > 400 && i != response.infos.images.length - 1)
 					continue;
-				html += "<img src='" + response.infos.images[i].url + "'>";
+
+				$("#left").html("<img src='" + response.infos.images[i].url + "'>");
 				break;
 			}
-			html += "<div class='right'><h2>" + response.infos.name + "</h2>";
-			$.getJSON("http://eracnos.ch:8080/tracks/artist=" + response.infos.name + "/country_code=" + response.infos.country)
-			.done(function(r) {
-				var previewIndex = Math.floor((Math.random() * (r.tracks.length - 1)));
-				html += "<audio autoplay><source src=" + r.tracks[previewIndex].preview_url + " type='audio/mp3'></audio>";
-				html += "<p class='description'>" + response.infos.description + "</p>";
-				html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a>";
-				html += "<span class='musicinfos'>You're listening to <strong>" + r.tracks[previewIndex].name;
-				html += "</strong> from album <strong>" + r.tracks[previewIndex].album + "</strong>.</span>";
-				html += "</div><table>";
-				if(response.infos.type.toLowerCase() === "group") {
-					html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
-					html += "<tr><th>End :</th><td>";
-					if(response.infos.life_span.end === "")
-				 		html += "Still rollin'</td></tr>";
-					else
-						html += response.infos.life_span.end + "</td></tr>";
-				}
-				if(response.infos.facebook !== "")
-					html += "<tr><th>Facebook :</th><td><a href='" + response.infos.facebook + "'>" + response.infos.facebook + "</a></td></tr>";
-				html += "</table>";
-
-				console.log(html);
-				$("#markerInfo").html(html);
-				$("#markerInfo").show();
-				$(window).scrollTo("max");
-			})
-			.fail(function(error) {
-				console.log("Fail tracks");
-				if(artistIndex + 1 < performersCount)
-					getArtistInfo(event, artistIndex + 1, performersCount);
-				else {
-					var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
-					html += " :(</center></h2>";
-					$("#markerInfo").html(html);
-					$("#markerInfo").show();
-				}
-			});
-			artistSelected = true;
-		}).fail(function(error) {
-			console.log("Fail infos");
-			if(artistIndex + 1 < performersCount)
-				getArtistInfo(event, artistIndex + 1, performersCount);
-			else {
-				var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
-				html += " :(</center></h2>";
-				$("#markerInfo").html(html);
-				$("#markerInfo").show();
+			var html = "<h2>" + response.infos.name + "</h2>";
+			html += "<p class='description'>" + response.infos.description + "</p>";
+			html += "<a class='spaced' href='" + event.offer + "'>Buy tickets</a>";
+			html += "<span id='musicinfos' class='musicinfos'>";
+			if(trackFound != "")
+				html += trackFound;
+			html += "</span>";
+			html += "<table>";
+			if(response.infos.type.toLowerCase() === "group") {
+				html += "<tr><th>Created in :</th><td>" + response.infos.life_span.begin + "</td></tr>";
+				html += "<tr><th>End :</th><td>";
+				if(response.infos.life_span.end === "")
+			 		html += "Still rollin'</td></tr>";
+				else
+					html += response.infos.life_span.end + "</td></tr>";
 			}
-		});
-		if(!artistSelected) {
-			var html = "<h2><center>Loading infos for artist : " + event.performers[artistIndex].name;
-			html += "</center></h2>";
-			$("#markerInfo").html(html);
+			if(response.infos.facebook !== "")
+				html += "<tr><th>Facebook :</th><td><a href='" + response.infos.facebook + "'>" + response.infos.facebook + "</a></td></tr>";
+			html += "</table>";
+			console.log(html);
+			$("#right").html(html);
 			$("#markerInfo").show();
-		}
+			$(window).scrollTo("max");
+			infosFound = true;
+		})
+		.fail(function(error) {
+			console.log("Fail infos");
+			var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
+			html += " :(</center></h2><span id='musicinfos' class='musicinfos'>";
+			if(trackFound != "")
+				html += trackFound;
+			html += "</span>";
+			$("#right").html(html);
+			$("#left").html("");
+			infosFound = true;
+			$("#markerInfo").show();
+		});
+
+		$.getJSON("http://eracnos.ch:8080/tracks/artist=" + event.performers[artistIndex].name + "/country_code=US")
+		.done(function(response) {
+			var previewIndex = Math.floor((Math.random() * (response.tracks.length - 1)));
+			while(response.tracks[previewIndex].preview_url == "")
+				previewIndex = Math.floor((Math.random() * (response.tracks.length - 1)));
+			var html = "<audio autoplay><source src='" + response.tracks[previewIndex].preview_url + "' type='audio/mp3'></audio>";
+			$("#audioStuff").html(html);
+			html = "You're listening to <strong>" + response.tracks[previewIndex].name;
+			html += "</strong> from album <strong>" + response.tracks[previewIndex].album + "</strong>.";
+			//$("#musicinfos2").html(html);
+			trackFound = html;
+			if(infosFound)
+				$("#musicinfos").html(html);
+		})
+		.fail(function(error) {
+			console.log("Fail tracks");
+			// if(artistIndex + 1 < performersCount)
+			// 	getArtistInfo(event, artistIndex + 1, performersCount);
+			// else {
+			// 	var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
+			// 	html += " :(</center></h2>";
+			// 	$("#markerInfo").html(html);
+			// 	$("#markerInfo").show();
+			// }
+		});
+
+		// if(!artistSelected) {
+		// 	var html = "<h2><center>Loading infos for artist : " + event.performers[artistIndex].name;
+		// 	html += "</center></h2>";
+		// 	$("#markerInfo").html(html);
+		// 	$("#markerInfo").show();
+		// }
 	};
 
 	function getURLParameters(param) {
