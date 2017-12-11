@@ -16,7 +16,8 @@
 	urlcolor=blue
 }
 
-\usetheme{Warsaw}
+\usetheme{Frankfurt}
+\usecolortheme{beaver}
 
 \addtobeamertemplate{navigation symbols}{}{%
     \usebeamerfont{footline}%
@@ -75,13 +76,13 @@
 \begin{frame}
 	\frametitle{\secname}
 	\framesubtitle{\subsecname}
-	Pour réaliser cette web app, nous avons utilisé les API suivantes :
 	\begin{itemize}
 		\item Spotify : recherche d'artistes et top tracks (route \mintinline{text}{events}, \mintinline{text}{infos} et \mintinline{text}{tracks})
 		\item Eventful : liste des événements (lieux, dates et artistes) (route \mintinline{text}{events})
 		\item Wikipédia : principale source d'informations sur un artiste (route \mintinline{text}{infos})
         \item MusicBrainz : informations complémentaires sur les artistes (route \mintinline{text}{infos})
 		\item BandsInTown : informations complémentaires sur les artistes (route \mintinline{text}{events} et \mintinline{text}{infos})
+		\item Google Maps : pour la carte interactive côté client
 	\end{itemize}
 \end{frame}
 
