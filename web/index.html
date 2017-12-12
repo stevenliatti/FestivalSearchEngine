@@ -7,6 +7,7 @@
 	<link rel="stylesheet" type="text/css" href="style/main.css">
 	<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi-HRdOq1ggyGoDwyqSSNtwo-GyvIcmNA&libraries=places"></script>
 	<script
 	src="https://code.jquery.com/jquery-3.2.1.min.js"
 	integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
@@ -18,7 +19,7 @@
 	<div id="search">
 		<form id="searchForm" action="index.html" method="get">
 			<input type="text" placeholder="Search an artist" name="artistQuery">
-			<input type="text" placeholder="Search a location" name="locationQuery">
+			<input type="text" placeholder="Search a location" name="locationQuery" id="locationText">
 			<input type="submit" class="hidden" tabindex="-1">
 		</form>
 	</div>
@@ -44,6 +45,7 @@
 
 		addMarkers();
 	};
+	var autocomplete = new google.maps.places.Autocomplete(/** @type {!HTMLInputElement} */ (document.getElementById("locationText")));
 
 	function addMarkers() {
 		var artistQuery = getURLParameters("artistQuery");
@@ -149,7 +151,7 @@
 				html += "<img src='" + artist.thumb + "'>";
 			else if(artist.image != "")
 				html += "<img src='" + artist.image + "'>";
-			html += "<h4>" + artist.name + "</h4></span>";
+		html += "<h4>" + artist.name + "</h4></span>";
 		});
 
 		$("#artistSelection").html(html);
@@ -173,7 +175,7 @@
 			console.log(response);
 			for(i = 0 ; i < response.infos.images.length ; i++)
 			{
-				if(response.infos.images[i].width > 400 && i != response.infos.images.length - 1)
+				if(response.infos.images[i].width > 400 && i < response.infos.images.length - 1)
 					continue;
 
 				$("#left").html("<img src='" + response.infos.images[i].url + "'>");
@@ -198,15 +200,17 @@
 			}
 			if(response.infos.facebook !== "")
 				html += "<tr><th>Facebook :</th><td><a href='" + response.infos.facebook + "'>" + response.infos.facebook + "</a></td></tr>";
-			html += "<tr><th>Style</th><td>";
-			response.infos.genres.forEach(function(genre, i) {
-				if(i < 4) {
-					html += genre;
-					if(i < response.infos.genres.length - 1 && i < 3)
-						html += " / ";
-				}
-			});
-			html += "</td></tr>";
+			if(response.infos.genres.length > 0) {
+				html += "<tr><th>Style</th><td>";
+				response.infos.genres.forEach(function(genre, i) {
+					if(i < 4) {
+						html += genre;
+						if(i < response.infos.genres.length - 1 && i < 3)
+							html += " / ";
+					}
+				});
+				html += "</td></tr>";
+			}
 			html += "<tr><th>Popular tracks</th><td id='popularTracks'>";
 			if(popularTracks != "")
 				html += popularTracks;
@@ -226,7 +230,6 @@
 				html += trackFound;
 			html += "</span>";
 			$("#right").html(html);
-			//$("#left").html("");
 			infosFound = true;
 			$("#markerInfo").show();
 		});
@@ -245,7 +248,7 @@
 				$("#musicinfos").html(html);
 			html = "<ol>"
 			for (i = 0; i < response.tracks.length && i < 3 ; i++) {
-    			html += "<li>" + response.tracks[i].name + " in " + response.tracks[i].album + "</li>";
+    			html += "<li><strong>" + response.tracks[i].name + "</strong> in " + response.tracks[i].album + "</li>";
 			}
 			html += "</ol>";
 			popularTracks = html;
@@ -254,22 +257,12 @@
 		.fail(function(error) {
 			console.log("Fail tracks");
 			$("#popularTracks").html("Not found");
-			// if(artistIndex + 1 < performersCount)
-			// 	getArtistInfo(event, artistIndex + 1, performersCount);
-			// else {
-			// 	var html = "<h2><center>No more infos for artist : " + event.performers[artistIndex].name;
-			// 	html += " :(</center></h2>";
-			// 	$("#markerInfo").html(html);
-			// 	$("#markerInfo").show();
-			// }
 		});
 
-		// if(!artistSelected) {
 		var html = "<h2><center>Loading infos for artist : " + artistInfos.name;
 		html += "</center></h2>";
 		$("#right").html(html);
 		$("#markerInfo").show();
-		// }
 	};
 
 	function getURLParameters(param) {
