@@ -57,8 +57,6 @@
     \end{columns}
 \end{frame}
 
-
-
 \section{Introduction}
 \subsection{Buts du projet}
 \begin{frame}
@@ -72,7 +70,8 @@
 		\item Jouer (en arrière plan) un extrait d'un son d'un artiste de l'événement
 	\end{itemize}
 \end{frame}
-\subsection{API utilisées}
+
+\subsection{APIs utilisées}
 \begin{frame}
 	\frametitle{\secname}
 	\framesubtitle{\subsecname}
@@ -87,7 +86,6 @@
 \end{frame}
 
 \section{Serveur}
-
 \subsection{Route \mintinline{text}{events}}
 \begin{frame}
 	\frametitle{\secname}
@@ -136,33 +134,13 @@
 	\end{itemize}
 \end{frame}
 
-\subsection{Divers}
-\begin{frame}[fragile]
-	\frametitle{\secname}
-	\framesubtitle{\subsecname}
-	Serveur Node.js avec structure basée sur les promesses (Promise) :
-	\begin{minted}[linenos]{javascript}
-// doSomething() and doSomethingElse() return a Promise
-doSomething()
-.then(result => { return doSomethingElse(result); })
-.then(finalResult => { console.log("OK :" + finalResult); })
-.catch(error => { console.log(error); });
-	\end{minted}
-	\bigbreak
-	Utilisation d'AWS (avec scripts shell pour le déploiement) :
-	\begin{itemize}
-		\item Pour héberger le serveur Node.js, la base de données MongoDB,
-		la documentation de l'API et le serveur Apache pour servir les fichiers client (HTML)
-		\item Mettre en pratique le cours de Cloud
-	\end{itemize}
-\end{frame}
-
 \section{Client}
-\subsection{APIs & technologies}
+\subsection{APIs \& technologies}
 \begin{frame}
 	\frametitle{\secname}
+	\framesubtitle{\subsecname}
 	\begin{itemize}
-		\item Javascript & JQuery
+		\item Javascript \& JQuery
 		\item Google Maps (Map, marker, infobubble, geocoder)
 		\item Overlapping Marker Spiderfier
 		\item Maps marker clusterer
@@ -172,6 +150,7 @@ doSomething()
 \subsection{En gros}
 \begin{frame}
 	\frametitle{\secname}
+	\framesubtitle{\subsecname}
 	\begin{itemize}
 		\item Un formulaire
 		\item Pleins de <div>
