@@ -87,25 +87,6 @@
 \end{frame}
 
 \section{Serveur}
-\subsection{Généralités}
-\subsubsection{Node.js et Promesses}
-\begin{frame}[fragile]
-	\frametitle{\secname}
-	\framesubtitle{\subsubsecname}
-	Serveur Node.js avec structure basée sur les promesses (Promise) :
-	\begin{minted}[linenos]{javascript}
-let doSomething = function(data) {
-  return new Promise((resolve, reject) => {
-    if (test) resolve(data);
-    else reject("error");
-  });
-}
-doSomething()
-.then(result => { return doSomethingElse(result); })
-.then(finalResult => { console.log("OK :" + finalResult); })
-.catch(error => { console.log(error); });
-	\end{minted}
-\end{frame}
 
 \subsection{Route \mintinline{text}{events}}
 \begin{frame}
@@ -113,7 +94,7 @@ doSomething()
 	\framesubtitle{\subsecname}
 	\begin{figure}
 		\begin{center}
-			\includegraphics[width=0.75\textwidth]{images/events.png}
+			\includegraphics[width=0.8\textwidth]{images/events.png}
 		\end{center}
 		\caption{Route events}
 	\end{figure}
@@ -125,7 +106,7 @@ doSomething()
 	\framesubtitle{\subsecname}
 	\begin{figure}
 		\begin{center}
-			\includegraphics[width=0.75\textwidth]{images/infos.png}
+			\includegraphics[width=0.8\textwidth]{images/infos.png}
 		\end{center}
 		\caption{Route infos}
 	\end{figure}
@@ -137,7 +118,7 @@ doSomething()
 	\framesubtitle{\subsecname}
 	\begin{figure}
 		\begin{center}
-			\includegraphics[width=0.75\textwidth]{images/tracks.png}
+			\includegraphics[width=0.8\textwidth]{images/tracks.png}
 		\end{center}
 		\caption{Route tracks}
 	\end{figure}
@@ -155,16 +136,23 @@ doSomething()
 	\end{itemize}
 \end{frame}
 
-\subsection{Déploiement sur AWS}
-\begin{frame}
+\subsection{Divers}
+\begin{frame}[fragile]
 	\frametitle{\secname}
 	\framesubtitle{\subsecname}
-	Utilisation du cloud AWS d'Amazon (avec scripts shell pour le déploiement) :
+	Serveur Node.js avec structure basée sur les promesses (Promise) :
+	\begin{minted}[linenos]{javascript}
+// doSomething() and doSomethingElse() return a Promise
+doSomething()
+.then(result => { return doSomethingElse(result); })
+.then(finalResult => { console.log("OK :" + finalResult); })
+.catch(error => { console.log(error); });
+	\end{minted}
+	\bigbreak
+	Utilisation d'AWS (avec scripts shell pour le déploiement) :
 	\begin{itemize}
-		\item Pour héberger le serveur Node.js
-		\item Pour héberger la base de données MongoDB
-		\item Pour héberger la documentation de l'API
-		\item Pour héberger le serveur Apache pour servir les fichiers client (HTML)
+		\item Pour héberger le serveur Node.js, la base de données MongoDB, 
+		la documentation de l'API et le serveur Apache pour servir les fichiers client (HTML)
 		\item Mettre en pratique le cours de Cloud
 	\end{itemize}
 \end{frame}
