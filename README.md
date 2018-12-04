@@ -1,16 +1,9 @@
 # Festival Search Engine
 
 ## Installation and run
-You can access it via [this URL](http://eracnos.ch). 
-Examples of routes and doc are [here](http://eracnos.ch/routes.html).
-
-To run locally, you need Node.js with npm and MongoDB installed. In terminal, move to `src` and run :
-  ```
-  npm install
-  npm start
-  ```
-You need to have an instance of MongoDB running too.
-Next, open `http://localhost:8080/` in your browser.
+To run locally, you need Node.js with npm, MongoDB, apiDoc.js and Apache installed. You can use the `full_install.sh` script to build the server and doc and copy html files to your Apache directory.
+Next, open `http://localhost:8080/doc` in your browser to see the API documentation.
+You can replace your keys and credentials in `rest/utilities/globals.js`. 
 
 ## Features
 ![Mock up](mockup/homepage.png)
