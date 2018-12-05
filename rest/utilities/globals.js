@@ -5,7 +5,7 @@ axios = require('axios'),
 
 fs = require('fs'),
 Log = require("log"),
-log = new Log("debug", fs.createWriteStream("fse.log")),
+log = new Log("debug"),
 
 cors = require('cors'),
 

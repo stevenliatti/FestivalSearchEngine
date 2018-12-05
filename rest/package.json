@@ -6,7 +6,7 @@
     "apidoc": {
         "name": "Festival Search Engine API",
         "title": "Festival Search Engine API",
-        "url": "http://eracnos.ch:8080"
+        "url": "http://localhost:8080"
     },
     "dependencies": {
         "axios": "^0.17.1",
@@ -17,6 +17,6 @@
         "mongodb": "^2.2.33",
         "monk": "^6.0.5",
         "path": "^0.12.7",
-        "spotify-web-api-node": "^2.5.0"
+        "spotify-web-api-node": "^4.0.0"
     }
 }
